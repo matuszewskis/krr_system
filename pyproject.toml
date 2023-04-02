@@ -2,12 +2,13 @@
 name = "krr-system"
 version = "0.1.0"
 description = ""
-authors = ["beljasiak <Bartusus112309>"]
+authors = ["beljasiak"]
 readme = "README.md"
-packages = [{include = "krr_system"}]
+packages = []
 
 [tool.poetry.dependencies]
 python = "^3.9"
+jupyter = "^1.0.0"
 
 
 [build-system]
