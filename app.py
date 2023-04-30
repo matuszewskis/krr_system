@@ -27,9 +27,6 @@ list_of_fluents = file_fluents.read()
 file_actions = open("variables/actions.txt", "r")
 list_of_actions = file_actions.read()
 
-file_durations = open("variables/durations.txt", "r")
-list_of_durations = file_durations.read()
-
 file_statements = open("variables/statements.txt", "r")
 list_of_statements = file_statements.read()
 
@@ -42,6 +39,12 @@ list_of_observations = file_observations.read()
 file_action_occurences = open("variables/action_occurences.txt", "r")
 list_of_action_occurences = file_action_occurences.read()
 
+file_fluents.close()
+file_actions.close()
+file_statements.close()
+file_initial_states.close()
+file_observations.close()
+file_action_occurences.close()
 
 st.title("Knowledge Representation and Reasoning")
 
@@ -53,40 +56,40 @@ st.header("Domain Description")
 if reset_button:
     list_of_fluents = ""
     list_of_actions = ""
-    list_of_durations = ""
     list_of_statements = ""
     list_of_initial_states = ""
     list_of_observations = ""
     list_of_action_occurences = ""
     file_fluents = open("variables/fluents.txt", "w")
     file_actions = open("variables/actions.txt", "w")
-    file_durations = open("variables/durations.txt", "w")
     file_statements = open("variables/statements.txt", "w")
     file_initial_states = open("variables/initial_states.txt", "w")
     file_observations = open("variables/observations.txt", "w")
     file_action_occurences = open("variables/action_occurences.txt", "w")
     file_fluents.write("")
     file_actions.write("")
-    file_durations.write("")
     file_statements.write("")
     file_initial_states.write("")
     file_observations.write("")
     file_action_occurences.write("")
+    file_fluents.close()
+    file_actions.close()
+    file_statements.close()
+    file_initial_states.close()
+    file_observations.close()
+    file_action_occurences.close()
 
 
-# fluents & actions input
+# fluents input
 
 col1, col2 = st.columns([5, 1])
 
 with col1:
     fluent_input = st.text_input(label="Input fluent", max_chars=100)
-    action_input = st.text_input(label="Input action", max_chars=100)
 
 with col2:
     st.text("")
     fluent_button = st.button(label="Submit fluent")
-    st.text("")
-    action_button = st.button(label="Submit action")
 
 
 if fluent_button:
@@ -94,87 +97,112 @@ if fluent_button:
 
     if len(list_of_fluents) == 0:
         file_fluents.write(fluent_input)
+        list_of_fluents += fluent_input
     else:
-        file_fluents.write("," + fluent_input)
-        list_of_fluents += ","
-
-    list_of_fluents += fluent_input
-
-if action_button:
-    file_actions = open("variables/actions.txt", "a")
-
-    if len(list_of_actions) == 0:
-        file_actions.write(action_input)
-    else:
-        file_actions.write("," + action_input)
-        list_of_actions += ","
-
-    list_of_actions += action_input
+        list_of_fluents_splitted = list_of_fluents.split(",")
+        if fluent_input not in list_of_fluents_splitted:
+            file_fluents.write("," + fluent_input)
+            list_of_fluents += "," + fluent_input
+    
+    file_fluents.close()
 
 
-# duration input
+# actions input
 
 col1, col2, col3 = st.columns([3, 2, 1])
 
-action_durations = list_of_durations.split(",")
-action_values = [action_duration.split(";")[0] for action_duration in action_durations]
-durations_to_choose = [
-    action for action in list_of_actions.split(",") if action not in action_values
-]
-st.write(durations_to_choose)
-
 with col1:
-    fluent_duration = st.selectbox("Choose action to set duration", durations_to_choose)
+    action_input = st.text_input(label="Input action", max_chars=100)
 
 with col2:
-    duration = st.number_input(label="Set duration", min_value=0, step=1)
+    duration_input = st.number_input(label="Input duration", min_value=1, step=1)
+
+with col3:
+    st.text("")
+    action_button = st.button(label="Submit action")
+
+if action_button:
+    action_couple = f"{action_input};{duration_input}"
+    
+    file_actions = open("variables/actions.txt", "a")
+
+    if len(list_of_actions) == 0:
+        file_actions.write(action_couple)
+        list_of_actions += action_couple
+    else:
+        list_of_actions_splitted = list_of_actions.split(",")
+        if action_input not in list_of_actions_splitted:
+            file_actions.write("," + action_couple)
+            list_of_actions += "," + action_couple
+    
+    file_actions.close()
+
+
+# duration modification
+
+col1, col2, col3 = st.columns([3, 2, 1])
+
+actions = list_of_actions.split(",")
+if len(list_of_actions) == 0:
+    action_names = []
+    action_durations_values = []
+else:
+    action_names = [action.split(";")[0] for action in actions]
+    action_durations_values = [action.split(";")[1] for action in actions]
+
+with col1:
+    duration_action = st.selectbox("Choose action to modify duration", action_names)
+
+with col2:
+    duration = st.number_input(label="Modify duration", min_value=1, step=1)
 
 with col3:
     duration_button = st.text("")
-    if len(durations_to_choose) > 0:
+    if len(action_names) > 0:
         duration_button = st.button(label="Submit duration")
     else:
         duration_button = st.button(label="Submit duration", disabled=True)
 
 if duration_button:
-    duration_couple = f"{fluent_duration};{duration}"
-
-    file_durations = open("variables/durations.txt", "a")
-
-    if len(list_of_durations) == 0:
-        file_durations.write(duration_couple)
-    else:
-        file_durations.write("," + duration_couple)
-        list_of_durations += ","
-
-    list_of_durations += duration_couple
+    file_actions = open("variables/actions.txt", "w")
+    
+    action_index = action_names.index(duration_action)
+    action_durations_values[action_index] = str(duration)
+    new_durations = [f"{action_names[i]};{action_durations_values[i]}" for i in range(len(action_names))]
+    list_of_actions = ",".join(new_durations)
+    file_actions.write(list_of_actions)
+    file_actions.close()
+st.write(list_of_actions)
 
 
 # statement input
 
 st.subheader("Statements")
-col1, col2, col3, col4 = st.columns([3, 3, 2, 1])
+col1, col2, col3, col4 = st.columns([4, 3, 3, 2])
 
 
 with col1:
-    statement_action = st.selectbox("Choose action", list_of_actions.split(","))
-    statement_type = st.selectbox(
-        "Choose type of statement", ["causes", "releases", "impossible"]
+    statement_action = st.selectbox("Choose action",
+                                    [action.split(";")[0] for action in list_of_actions.split(",")])
+    statement_type = st.radio(
+        "Choose type of statement", ("causes", "releases", "impossible")
     )
 with col2:
     if statement_type != "impossible":
         statement_fluent = st.selectbox("Choose fluent", list_of_fluents.split(","))
-        statement_fluent_state = st.selectbox("Choose fluent state", [True, False])
+        statement_fluent_false = st.checkbox("False", key="fluent_false")
         statement_fluent_button = st.button(label="Add new fluent")
+        statement_fluent_state = "False" if statement_fluent_false else "True"
 
 with col3:
     statement_condition = st.selectbox("Choose condition", list_of_fluents.split(","))
-    statement_condition_state = st.selectbox("Choose condition state", [True, False])
+    statement_condition_false = st.checkbox("False", key="condition_false")
+    statement_condition_state = "False" if statement_condition_false else "True"
 with col4:
-    duration_button = st.text("")
-    duration_button = st.button(label="Submit statement")
+    submit_button = st.text("")
+    submit_button = st.button(label="Submit statement")
 
-if duration_button:
+if submit_button:
     if (statement_type != "releases") and (statement_type != "impossible"):
         statement_quartet = f"{statement_action};{statement_type};{statement_fluent};{statement_fluent_state};{statement_condition};{statement_condition_state}"
     elif statement_type != "releases":
@@ -186,12 +214,14 @@ if duration_button:
 
     if len(list_of_statements) == 0:
         file_statements.write(statement_quartet)
+        list_of_statements += statement_quartet
     else:
-        file_statements.write("," + statement_quartet)
-        list_of_statements += ","
-
-    list_of_statements += statement_quartet
-
+        list_of_statements_splitted = list_of_statements.split(",")
+        if statement_quartet not in list_of_statements_splitted:
+            file_statements.write("," + statement_quartet)
+            list_of_statements += "," + statement_quartet
+    
+    file_statements.close()
     st.write(f"{statement_quartet}")
     st.write(list_of_statements.split(","))
 
@@ -199,21 +229,20 @@ if duration_button:
 # initial condition input
 
 st.subheader("Initial condition")
-col1, col2, col3 = st.columns([3, 2, 1])
+col1, col2 = st.columns([5, 1])
 
 with col1:
     initial_state_fluent = st.selectbox(
         key="initial_state_fluent",
         label="Choose fluent",
-        options=list_of_fluents.split(","),
+        options=list_of_fluents.split(",")
     )
+    initial_state_fluent_false = st.checkbox(
+        key="initial_state_fluent_false",
+        label="False"
+    )
+    initial_state_fluent_value = "False" if initial_state_fluent_false else "True"
 with col2:
-    initial_state_fluent_value = st.selectbox(
-        key="initial_state_fluent_value",
-        label="Choose fluent state",
-        options=[True, False],
-    )
-with col3:
     st.write("")
     initial_state = st.button(label="Submit inital state")
 
@@ -224,11 +253,13 @@ if initial_state:
 
     if len(list_of_initial_states) == 0:
         file_initial_states.write(initial_state_couple)
+        list_of_initial_states += initial_state_couple
     else:
-        file_initial_states.write("," + initial_state_couple)
-        list_of_initial_states += ","
-
-    list_of_initial_states += initial_state_couple
+        list_of_initial_states_splitted = list_of_initial_states.split(",")
+        if initial_state_fluent not in [initial.split(";")[0] for initial in list_of_initial_states_splitted]:
+            file_initial_states.write("," + initial_state_couple)
+            list_of_initial_states += "," + initial_state_couple
+    file_initial_states.close()
 
 
 st.header("Scenario")
@@ -244,30 +275,37 @@ with col1:
     observation_fluent = st.selectbox(
         key="observation_fluent",
         label="Choose fluent",
-        options=list_of_fluents.split(","),
+        options=list_of_fluents.split(",")
     )
+    observation_fluent_false = st.checkbox(
+        key="observation_fluent_false",
+        label="False"
+    )
+    observation_fluent_value = "False" if observation_fluent_false else "True"
 with col2:
-    observation_fluent_value = st.selectbox(
-        key="observation_fluent_value",
-        label="Choose fluent state",
-        options=[True, False],
+    observation_fluent_time = st.number_input(
+        key="observation_fluent_time", label="Choose observation time", min_value=1
     )
 with col3:
     st.write("")
     observation = st.button(label="Submit observation")
 
 if observation:
-    observation_couple = f"{observation_fluent};{observation_fluent_value}"
+    observation_couple = f"{observation_fluent};{observation_fluent_value};{observation_fluent_time}"
 
     file_observations = open("variables/observations.txt", "a")
 
     if len(list_of_observations) == 0:
         file_observations.write(observation_couple)
+        list_of_observations += observation_couple
     else:
-        file_observations.write("," + observation_couple)
-        list_of_observations += ","
-
-    list_of_observations += observation_couple
+        list_of_observations_splitted = list_of_observations.split(",")
+        existing_observations = [[obs.split(";")[0], obs.split(";")[2]] for obs in list_of_observations_splitted]
+        duplicate_observation = [observation_fluent, str(observation_fluent_time)]
+        if duplicate_observation not in existing_observations:
+            file_observations.write("," + observation_couple)
+            list_of_observations += "," + observation_couple
+    file_observations.close()
 
 
 # action occurences input
@@ -280,11 +318,11 @@ with col1:
     action_occurence = st.selectbox(
         key="action_occurence",
         label="Choose action occurence",
-        options=list_of_actions.split(","),
+        options=[action.split(";")[0] for action in list_of_actions.split(",")],
     )
 with col2:
     action_occurence_time = st.number_input(
-        key="action_occurence_time", label="Choose occurence time", min_value=0
+        key="action_occurence_time", label="Choose occurence time", min_value=1
     )
 with col3:
     st.write("")
@@ -297,11 +335,12 @@ if action_occurence_button:
 
     if len(list_of_action_occurences) == 0:
         file_action_occurences.write(action_occurence_couple)
+        list_of_action_occurences += action_occurence_couple
     else:
-        file_action_occurences.write("," + action_occurence_couple)
-        list_of_action_occurences += ","
-
-    list_of_action_occurences += action_occurence_couple
+        list_of_action_occurence_times = [ac.split(";")[1] for ac in list_of_action_occurences.split(",")]
+        if action_occurence_time in list_of_action_occurence_times:
+            file_action_occurences.write("," + action_occurence_couple)
+            list_of_action_occurences += "," + action_occurence_couple
 
 
 # model preparation
@@ -312,9 +351,9 @@ if calculate_button:
     m = TimeDomainDescription()
     for initial_state in list_of_initial_states.split(","):
         state = initial_state.split(";")
-        m.initially(**{state[0]: bool(state[1])})
+        m.initially(**{state[0]: state[1]=="True"})
 
-    for duration in list_of_durations.split(","):
+    for duration in list_of_actions.split(","):
         state = duration.split(";")
         m.duration(state[0], int(state[1]))
     for statement in list_of_statements.split(","):
@@ -322,19 +361,19 @@ if calculate_button:
         if stmnt[1] == "causes":
             m.causes(
                 stmnt[0],
-                Fluent(**{stmnt[2]: bool(stmnt[3])}),
-                conditions=Fluent(**{stmnt[4]: bool(stmnt[5])}),
+                Fluent(**{stmnt[2]: stmnt[3]=="True"}),
+                conditions=Fluent(**{stmnt[4]: stmnt[5]=="True"}),
             )
         elif stmnt[1] == "releases":
-            m.releases(stmnt[0], Fluent(**{stmnt[2]: bool(stmnt[3])}))
+            m.releases(stmnt[0], Fluent(**{stmnt[2]: stmnt[3]=="True"}))
     #         if stmnt[1] == 'impossible':
-    #             m.impossible(stmnt[0], conditions=Fluent(**{stmnt[4]: bool(stmnt[5])}))
+    #             m.impossible(stmnt[0], conditions=Fluent(**{stmnt[4]: stmnt[5]=="True"}))
 
     OBS_list = []
     for observation in list_of_observations.split(","):
         obs = observation.split(";")
-        OBS_list.append(Fluent(**{obs[0]: bool(obs[1])}))
-    OBS = (OBS_list, 1)
+        OBS_list.append(Fluent(**{obs[0]: obs[1]=="True"}))
+    OBS = (OBS_list, int(obs[2]))
 
     ACS_list = []
     for action in list_of_action_occurences.split(","):
@@ -352,7 +391,7 @@ if calculate_button:
         with Capturing() as output:
             s_result = s.is_consistent(verbose=True)
         st.write(output)
-        st.write(f"Is consistnet: {s_result}")
+        st.write(f"Is consistent: {s_result}")
     except Exception as e:
         st.write(f"Your mistake: {e}")
 
@@ -370,28 +409,22 @@ with st.sidebar:
     if len(list_of_actions) == 0:
         st.text("--- no actions inserted ---")
     else:
-        try:
-            action_durations = list_of_durations.split(",")
-            action_values = [
-                action_duration.split(";")[0] for action_duration in action_durations
-            ]
-            action_durations_values = [
-                action_duration.split(";")[1] for action_duration in action_durations
-            ]
-        except:
-            pass
+        action_durations = list_of_actions.split(",")
+        action_names = [
+            action_duration.split(";")[0] for action_duration in action_durations
+        ]
+        action_durations_values = [
+            action_duration.split(";")[1] for action_duration in action_durations
+        ]
         st.text("Actions (duration)")
-        for action in list_of_actions.split(","):
-            if action in action_values:
-                st.text(
-                    "- "
-                    + action
-                    + " ( "
-                    + action_durations_values[action_values.index(action)]
-                    + " )"
-                )
-            else:
-                st.text("- " + action + "(no duration set)")
+        for action in action_names:
+            st.text(
+                "- "
+                + action
+                + " ( "
+                + action_durations_values[action_names.index(action)]
+                + " )"
+            )
 
     if len(list_of_statements) == 0:
         st.text("--- no statements inserted ---")
@@ -402,7 +435,7 @@ with st.sidebar:
             st.text(
                 f"ACTION {stmnt[0]} {stmnt[1]} FLUENT {stmnt[2]}={stmnt[3]} GIVEN THAT {stmnt[4]}={stmnt[5]}"
             )
-    action_durations = list_of_durations.split(",")
+    action_durations = list_of_actions.split(",")
 
     if len(list_of_initial_states) == 0:
         st.text("--- no initial values inserted ---")
@@ -411,7 +444,7 @@ with st.sidebar:
         for initial_state in list_of_initial_states.split(","):
             state = initial_state.split(";")
             st.text(f"- {state[0]}={state[1]}")
-
+    
     if len(list_of_observations) == 0:
         st.text("--- no observations inserted ---")
     else:
