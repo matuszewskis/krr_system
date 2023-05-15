@@ -456,9 +456,10 @@ calculate_button = st.button("Calculate model")
 
 if calculate_button:
     m = TimeDomainDescription()
-    for initial_state in list_of_initial_states.split(","):
-        state = initial_state.split(";")
-        m.initially(**{state[0]: state[1] == "True"})
+    if len(list_of_initial_states) > 0:
+        for initial_state in list_of_initial_states.split(","):
+            state = initial_state.split(";")
+            m.initially(**{state[0]: state[1] == "True"})
 
     for duration in list_of_actions.split(","):
         state = duration.split(";")
@@ -487,7 +488,7 @@ if calculate_button:
             )
         elif stmnt[1] == "releases":
             m.releases(stmnt[0], fluent_values_model)
-        elif stmnt[1] == 'impossible':
+        elif stmnt[1] == "impossible":
             m.impossible(stmnt[0], conditions=condition_values_model)
 
     OBS_list = []
@@ -516,6 +517,67 @@ if calculate_button:
     except Exception as e:
         st.write(f"Your mistake: {e}")
 
+# action query
+
+st.subheader("Action query")
+
+col1, col2, col3 = st.columns([3, 2, 1])
+
+with col1:
+    action_query = st.selectbox(
+        key="action_query",
+        label="Choose action",
+        options=[action.split(";")[0] for action in list_of_actions.split(",")],
+    )
+with col2:
+    action_query_time = st.number_input(
+        key="action_query_time",
+        label="Choose time",
+        min_value=1
+    )
+with col3:
+    st.write("")
+    action_query_button = st.button(
+        key="action_query_button",
+        label="Calculate action query"
+    )
+
+# condition query
+
+st.subheader("Condition query")
+
+col1, col2, col3, col4 = st.columns([3, 4, 3, 2])
+
+with col1:
+    condition_query_type = st.selectbox(
+        key="condition_query_type",
+        label="Choose type",
+        options=["necessary", "possible"]
+    )
+with col2:
+    condition_query = st.selectbox(
+        key="condition_query",
+        label="Choose condition",
+        options=list_of_fluents.split(",")
+    )
+    condition_query_false = st.checkbox(
+        key="condition_query_false",
+        label="False"
+    )
+    condition_query_value = "False" if condition_query_false else "True"
+with col3:
+    condition_query_time = st.number_input(
+        key="condition_query_time",
+        label="Choose time",
+        min_value=1
+    )
+with col4:
+    st.write("")
+    condition_query_button = st.button(
+        key="condition_query_button",
+        label="Calculate condition query"
+    )
+
 # sidebar with current values
 
 with st.sidebar:
@@ -541,9 +603,9 @@ with st.sidebar:
             st.text(
                 "- "
                 + action
-                + " ( "
+                + " ("
                 + action_durations_values[action_names.index(action)]
-                + " )"
+                + ")"
             )
 
     if len(list_of_statements) == 0:
@@ -577,7 +639,7 @@ with st.sidebar:
         st.text("Observations")
         for observation in list_of_observations.split(","):
             obs = observation.split(";")
-            st.text(f"- {obs[0]}={obs[1]}")
+            st.text(f"- {obs[0]}={obs[1]} ({obs[2]})")
 
     if len(list_of_action_occurences) == 0:
         st.text("--- no action occurences inserted ---")

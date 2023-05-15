@@ -202,7 +202,7 @@ class TimeDomainDescription(DomainDescription):
 
         if len(self.impossibles):
             print("\nImpossibilities")
-            for cause, conditions in self.impossibles:
+            for cause, conditions in self.impossibles.items():
                 print("     Action: ", cause)
                 print("         under conditions: ", conditions)
 
