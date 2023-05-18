@@ -497,60 +497,69 @@ def scenario_calculation():
             state = initial_state.split(";")
             m.initially(**{state[0]: state[1] == "True"})
 
-    for duration in list_of_actions.split(","):
-        state = duration.split(";")
-        m.duration(state[0], int(state[1]))
-    for statement in list_of_statements.split(","):
-        stmnt = statement.split(";")
-        if stmnt[1] == "causes" or stmnt[1] == "releases":
-            statement_fluents_model = stmnt[2].split(":")
-            fluent_values_model = []
-            for i in statement_fluents_model:
-                fluent_values_model.append(Fluent(**{i.split("#")[0]: i.split("#")[1] == "True"}))
+    if len(list_of_actions) > 0:
+        for duration in list_of_actions.split(","):
+            state = duration.split(";")
+            m.duration(state[0], int(state[1]))
+    if len(list_of_statements) > 0:
+        for statement in list_of_statements.split(","):
+            stmnt = statement.split(";")
+            if stmnt[1] == "causes" or stmnt[1] == "releases":
+                statement_fluents_model = stmnt[2].split(":")
+                fluent_values_model = []
+                for i in statement_fluents_model:
+                    fluent_values_model.append(
+                        Fluent(**{i.split("#")[0]: i.split("#")[1] == "True"})
+                    )
 
-        statement_conditions_model = stmnt[3].split(":")
-        condition_values_model = []
-        try:
-            for i in statement_conditions_model:
-                condition_values_model.append(Fluent(**{i.split("#")[0]: i.split("#")[1] == "True"}))
-        except:
-            pass
+            statement_conditions_model = stmnt[3].split(":")
+            condition_values_model = []
+            try:
+                for i in statement_conditions_model:
+                    condition_values_model.append(
+                        Fluent(**{i.split("#")[0]: i.split("#")[1] == "True"})
+                    )
+            except:
+                pass
 
-        if stmnt[1] == "causes":
-            m.causes(
-                stmnt[0],
-                fluent_values_model,
-                conditions=condition_values_model,
-            )
-        elif stmnt[1] == "releases":
-            m.releases(stmnt[0], fluent_values_model)
-        elif stmnt[1] == "impossible":
-            m.impossible(stmnt[0], conditions=condition_values_model)
+            if stmnt[1] == "causes":
+                m.causes(
+                    stmnt[0],
+                    fluent_values_model,
+                    conditions=condition_values_model,
+                )
+            elif stmnt[1] == "releases":
+                m.releases(stmnt[0], fluent_values_model)
+            elif stmnt[1] == "impossible":
+                m.impossible(stmnt[0], conditions=condition_values_model)
 
-    OBS_list = []
-    for observation in list_of_observations.split(","):
-        obs = observation.split(";")
-        OBS_list.append(Fluent(**{obs[0]: obs[1] == "True"}))
-    OBS = (OBS_list, int(obs[2]))
+    OBS = ()
+    if len(list_of_observations) > 0:
+        OBS_list = []
+        for observation in list_of_observations.split(","):
+            obs = observation.split(";")
+            OBS_list.append(Fluent(**{obs[0]: obs[1] == "True"}))
+        OBS = (OBS_list, int(obs[2]))
 
-    ACS_list = []
-    for action in list_of_action_occurences.split(","):
-        acs = action.split(";")
-        ACS_list.append((acs[0], int(acs[1])))
-    ACS = tuple(ACS_list)
+    ACS = ()
+    if len(list_of_action_occurences) > 0:
+        ACS_list = []
+        for action in list_of_action_occurences.split(","):
+            acs = action.split(";")
+            ACS_list.append((acs[0], int(acs[1])))
+        ACS = tuple(ACS_list)
 
-    with Capturing() as output:
-        m.description()
-    st.write(output)
+    # with Capturing() as output:
+    #     m.description()
 
-    return Scenario(domain=m, observations=OBS, action_occurances=ACS)
+    return Scenario(domain=m, observations=OBS, action_occurances=ACS), m.description()
+
 
 if calculate_button:
-    s = scenario_calculation()
+    s, output = scenario_calculation()
     try:
-        with Capturing() as output:
-            s_result = s.is_consistent(verbose=True)
-        st.write(output)
+        s_result = s.is_consistent(verbose=True)
+        st.text(output)
         st.write(f"Is consistent: {s_result}")
     except Exception as e:
         st.write(f"Your mistake: {e}")
