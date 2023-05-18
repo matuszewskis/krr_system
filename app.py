@@ -454,7 +454,7 @@ if action_occurence_button:
 
 calculate_button = st.button("Calculate model")
 
-if calculate_button:
+def scenario_calculation():
     m = TimeDomainDescription()
     if len(list_of_initial_states) > 0:
         for initial_state in list_of_initial_states.split(","):
@@ -507,8 +507,10 @@ if calculate_button:
         m.description()
     st.write(output)
 
-    s = Scenario(domain=m, observations=OBS, action_occurances=ACS)
+    return Scenario(domain=m, observations=OBS, action_occurances=ACS)
 
+if calculate_button:
+    s = scenario_calculation()
     try:
         with Capturing() as output:
             s_result = s.is_consistent(verbose=True)
@@ -542,19 +544,27 @@ with col3:
         label="Calculate action query"
     )
 
+if action_query_button:
+    s = scenario_calculation()
+    try:
+        with Capturing() as output:
+            s_result = s.is_consistent(verbose=True)
+            if s_result:
+                a_result = s.does_action_perform(action_query, action_query_time)
+            else:
+                a_result = False
+        st.write(output)
+        st.write(f"Does action perform: {a_result}")
+    except Exception as e:
+        st.write(f"Your mistake: {e}")
+
 # condition query
 
 st.subheader("Condition query")
 
-col1, col2, col3, col4 = st.columns([3, 4, 3, 2])
+col1, col2, col3 = st.columns([3, 2, 1])
 
 with col1:
-    condition_query_type = st.selectbox(
-        key="condition_query_type",
-        label="Choose type",
-        options=["necessary", "possible"]
-    )
-with col2:
     condition_query = st.selectbox(
         key="condition_query",
         label="Choose condition",
@@ -565,18 +575,37 @@ with col2:
         label="False"
     )
     condition_query_value = "False" if condition_query_false else "True"
-with col3:
+with col2:
     condition_query_time = st.number_input(
         key="condition_query_time",
         label="Choose time",
         min_value=1
     )
-with col4:
+with col3:
     st.write("")
     condition_query_button = st.button(
         key="condition_query_button",
         label="Calculate condition query"
     )
+
+if condition_query_button:
+    s = scenario_calculation()
+    try:
+        with Capturing() as output:
+            s_result = s.is_consistent()
+            if s_result:
+                q_result = s.check_if_condition_hold(Fluent(**{condition_query: condition_query_value == "True"}), condition_query_time, verbose=True)
+            else:
+                q_result = False
+        st.write(output)
+        if q_result is None:
+            st.write("Condition possible, but unnecessary")
+        elif q_result:
+            st.write("Condition necessary")
+        else:
+            st.write("Condition impossible")
+    except Exception as e:
+        st.write(f"Your mistake: {e}")
 
 # sidebar with current values
 
