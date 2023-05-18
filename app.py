@@ -172,14 +172,17 @@ if duration_button:
 
     action_index = action_names.index(duration_action)
     action_durations_values[action_index] = str(duration)
-    new_durations = [f"{action_names[i]};{action_durations_values[i]}" for i in range(len(action_names))]
+    new_durations = [
+        f"{action_names[i]};{action_durations_values[i]}"
+        for i in range(len(action_names))
+    ]
     list_of_actions = ",".join(new_durations)
     file_actions.write(list_of_actions)
     file_actions.close()
 
 # statement input
 
-condition_values, fluent_values = list_of_technical_vars.split(';')
+condition_values, fluent_values = list_of_technical_vars.split(";")
 condition_values = int(condition_values)
 fluent_values = int(fluent_values)
 
@@ -187,8 +190,9 @@ st.subheader("Statements")
 col1, col2, col3, col4 = st.columns([4, 3, 3, 2])
 
 with col1:
-    statement_action = st.selectbox("Choose action",
-                                    [action.split(";")[0] for action in list_of_actions.split(",")])
+    statement_action = st.selectbox(
+        "Choose action", [action.split(";")[0] for action in list_of_actions.split(",")]
+    )
     statement_type = st.radio(
         "Choose type of statement", ("causes", "releases", "impossible")
     )
@@ -206,35 +210,44 @@ with col2:
 
         # 1st statement
         if fluent_values > 0:
-            statement_fluent_1 = st.selectbox("Choose fluent 1st", list_of_fluents.split(","))
+            statement_fluent_1 = st.selectbox(
+                "Choose fluent 1st", list_of_fluents.split(",")
+            )
             statement_fluent_false_1 = st.checkbox("False", key="fluent_false_1")
             statement_fluent_state_1 = "False" if statement_fluent_false_1 else "True"
 
         # 2nd statement
         if fluent_values > 1:
-            statement_fluent_2 = st.selectbox("Choose fluent 2nd", list_of_fluents.split(","))
+            statement_fluent_2 = st.selectbox(
+                "Choose fluent 2nd", list_of_fluents.split(",")
+            )
             statement_fluent_false_2 = st.checkbox("False", key="fluent_false_2")
             statement_fluent_state_2 = "False" if statement_fluent_false_2 else "True"
 
         # 3rd statement
         if fluent_values > 2:
-            statement_fluent_3 = st.selectbox("Choose fluent 3rd", list_of_fluents.split(","))
+            statement_fluent_3 = st.selectbox(
+                "Choose fluent 3rd", list_of_fluents.split(",")
+            )
             statement_fluent_false_3 = st.checkbox("False", key="fluent_false_3")
             statement_fluent_state_3 = "False" if statement_fluent_false_3 else "True"
 
         # 4th statement
         if fluent_values > 3:
-            statement_fluent_4 = st.selectbox("Choose fluent 4th", list_of_fluents.split(","))
+            statement_fluent_4 = st.selectbox(
+                "Choose fluent 4th", list_of_fluents.split(",")
+            )
             statement_fluent_false_4 = st.checkbox("False", key="fluent_false_4")
             statement_fluent_state_4 = "False" if statement_fluent_false_4 else "True"
 
         # 5th statement
         if fluent_values > 4:
-            statement_fluent_5 = st.selectbox("Choose fluent 5th", list_of_fluents.split(","))
+            statement_fluent_5 = st.selectbox(
+                "Choose fluent 5th", list_of_fluents.split(",")
+            )
             statement_fluent_false_5 = st.checkbox("False", key="fluent_false_5")
             statement_fluent_state_5 = "False" if statement_fluent_false_5 else "True"
 
-        st.write(fluent_values)
 
 with col3:
     statement_condition_button = st.button(label="Add new condition")
@@ -249,39 +262,45 @@ with col3:
 
     # 1st statement condition
     if condition_values > 0:
-        statement_condition_1 = st.selectbox("Choose condition 1st", list_of_fluents.split(","))
+        statement_condition_1 = st.selectbox(
+            "Choose condition 1st", list_of_fluents.split(",")
+        )
         statement_condition_false_1 = st.checkbox("False", key="condition_false_1")
         statement_condition_state_1 = "False" if statement_condition_false_1 else "True"
 
     #  2nd statement condition
     if condition_values > 1:
-        statement_condition_2 = st.selectbox("Choose condition 2nd", list_of_fluents.split(","))
+        statement_condition_2 = st.selectbox(
+            "Choose condition 2nd", list_of_fluents.split(",")
+        )
         statement_condition_false_2 = st.checkbox("False", key="condition_false_2")
         statement_condition_state_2 = "False" if statement_condition_false_2 else "True"
 
     # 3rd statement condition
     if condition_values > 2:
-        statement_condition_3 = st.selectbox("Choose condition 3rd", list_of_fluents.split(","))
+        statement_condition_3 = st.selectbox(
+            "Choose condition 3rd", list_of_fluents.split(",")
+        )
         statement_condition_false_3 = st.checkbox("False", key="condition_false_3")
         statement_condition_state_3 = "False" if statement_condition_false_3 else "True"
 
     # 4th statement condition
     if condition_values > 3:
-        statement_condition_4 = st.selectbox("Choose condition 4th", list_of_fluents.split(","))
+        statement_condition_4 = st.selectbox(
+            "Choose condition 4th", list_of_fluents.split(",")
+        )
         statement_condition_false_4 = st.checkbox("False", key="condition_false_4")
         statement_condition_state_4 = "False" if statement_condition_false_4 else "True"
 
     # 5th statement condition
     if condition_values > 4:
-        statement_condition_5 = st.selectbox("Choose condition 5th", list_of_fluents.split(","))
+        statement_condition_5 = st.selectbox(
+            "Choose condition 5th", list_of_fluents.split(",")
+        )
         statement_condition_false_5 = st.checkbox("False", key="condition_false_5")
         statement_condition_state_5 = "False" if statement_condition_false_5 else "True"
 
-    st.write(condition_values)
 
-    # statement_condition = st.selectbox("Choose condition", list_of_fluents.split(","))
-    # statement_condition_false = st.checkbox("False", key="condition_false")
-    # statement_condition_state = "False" if statement_condition_false else "True"
 with col4:
     submit_button = st.text("")
     submit_button = st.button(label="Submit statement")
@@ -295,13 +314,21 @@ if submit_button:
     if condition_values > 0:
         statement_conditions += f"{statement_condition_1}#{statement_condition_state_1}"
     if condition_values > 1:
-        statement_conditions += f":{statement_condition_2}#{statement_condition_state_2}"
+        statement_conditions += (
+            f":{statement_condition_2}#{statement_condition_state_2}"
+        )
     if condition_values > 2:
-        statement_conditions += f":{statement_condition_3}#{statement_condition_state_3}"
+        statement_conditions += (
+            f":{statement_condition_3}#{statement_condition_state_3}"
+        )
     if condition_values > 3:
-        statement_conditions += f":{statement_condition_4}#{statement_condition_state_4}"
+        statement_conditions += (
+            f":{statement_condition_4}#{statement_condition_state_4}"
+        )
     if condition_values > 4:
-        statement_conditions += f":{statement_condition_5}#{statement_condition_state_5}"
+        statement_conditions += (
+            f":{statement_condition_5}#{statement_condition_state_5}"
+        )
 
     if statement_type != "impossible":
         statement_fluents = ""
@@ -317,7 +344,9 @@ if submit_button:
             statement_fluents += f":{statement_fluent_5}#{statement_fluent_state_5}"
         statement_quartet = f"{statement_action};{statement_type};{statement_fluents};{statement_conditions}"
     elif statement_type == "impossible":
-        statement_quartet = f"{statement_action};{statement_type};;{statement_conditions}"
+        statement_quartet = (
+            f"{statement_action};{statement_type};;{statement_conditions}"
+        )
     # else:
     #     statement_quartet = f"{statement_action};{statement_type};{statement_fluent};{statement_fluent_state};;;"
 
@@ -346,11 +375,10 @@ with col1:
     initial_state_fluent = st.selectbox(
         key="initial_state_fluent",
         label="Choose fluent",
-        options=list_of_fluents.split(",")
+        options=list_of_fluents.split(","),
     )
     initial_state_fluent_false = st.checkbox(
-        key="initial_state_fluent_false",
-        label="False"
+        key="initial_state_fluent_false", label="False"
     )
     initial_state_fluent_value = "False" if initial_state_fluent_false else "True"
 with col2:
@@ -367,7 +395,9 @@ if initial_state:
         list_of_initial_states += initial_state_couple
     else:
         list_of_initial_states_splitted = list_of_initial_states.split(",")
-        if initial_state_fluent not in [initial.split(";")[0] for initial in list_of_initial_states_splitted]:
+        if initial_state_fluent not in [
+            initial.split(";")[0] for initial in list_of_initial_states_splitted
+        ]:
             file_initial_states.write("," + initial_state_couple)
             list_of_initial_states += "," + initial_state_couple
     file_initial_states.close()
@@ -384,11 +414,10 @@ with col1:
     observation_fluent = st.selectbox(
         key="observation_fluent",
         label="Choose fluent",
-        options=list_of_fluents.split(",")
+        options=list_of_fluents.split(","),
     )
     observation_fluent_false = st.checkbox(
-        key="observation_fluent_false",
-        label="False"
+        key="observation_fluent_false", label="False"
     )
     observation_fluent_value = "False" if observation_fluent_false else "True"
 with col2:
@@ -400,7 +429,9 @@ with col3:
     observation = st.button(label="Submit observation")
 
 if observation:
-    observation_couple = f"{observation_fluent};{observation_fluent_value};{observation_fluent_time}"
+    observation_couple = (
+        f"{observation_fluent};{observation_fluent_value};{observation_fluent_time}"
+    )
 
     file_observations = open("variables/observations.txt", "a")
 
@@ -409,7 +440,10 @@ if observation:
         list_of_observations += observation_couple
     else:
         list_of_observations_splitted = list_of_observations.split(",")
-        existing_observations = [[obs.split(";")[0], obs.split(";")[2]] for obs in list_of_observations_splitted]
+        existing_observations = [
+            [obs.split(";")[0], obs.split(";")[2]]
+            for obs in list_of_observations_splitted
+        ]
         duplicate_observation = [observation_fluent, str(observation_fluent_time)]
         if duplicate_observation not in existing_observations:
             file_observations.write("," + observation_couple)
@@ -445,7 +479,9 @@ if action_occurence_button:
         file_action_occurences.write(action_occurence_couple)
         list_of_action_occurences += action_occurence_couple
     else:
-        list_of_action_occurence_times = [ac.split(";")[1] for ac in list_of_action_occurences.split(",")]
+        list_of_action_occurence_times = [
+            ac.split(";")[1] for ac in list_of_action_occurences.split(",")
+        ]
         if action_occurence_time not in list_of_action_occurence_times:
             file_action_occurences.write("," + action_occurence_couple)
             list_of_action_occurences += "," + action_occurence_couple
@@ -533,15 +569,12 @@ with col1:
     )
 with col2:
     action_query_time = st.number_input(
-        key="action_query_time",
-        label="Choose time",
-        min_value=1
+        key="action_query_time", label="Choose time", min_value=1
     )
 with col3:
     st.write("")
     action_query_button = st.button(
-        key="action_query_button",
-        label="Calculate action query"
+        key="action_query_button", label="Calculate action query"
     )
 
 if action_query_button:
@@ -568,24 +601,18 @@ with col1:
     condition_query = st.selectbox(
         key="condition_query",
         label="Choose condition",
-        options=list_of_fluents.split(",")
+        options=list_of_fluents.split(","),
     )
-    condition_query_false = st.checkbox(
-        key="condition_query_false",
-        label="False"
-    )
+    condition_query_false = st.checkbox(key="condition_query_false", label="False")
     condition_query_value = "False" if condition_query_false else "True"
 with col2:
     condition_query_time = st.number_input(
-        key="condition_query_time",
-        label="Choose time",
-        min_value=1
+        key="condition_query_time", label="Choose time", min_value=1
     )
 with col3:
     st.write("")
     condition_query_button = st.button(
-        key="condition_query_button",
-        label="Calculate condition query"
+        key="condition_query_button", label="Calculate condition query"
     )
 
 if condition_query_button:
@@ -643,15 +670,21 @@ with st.sidebar:
         st.text("Statements")
         for statement in list_of_statements.split(","):
             stmnt = statement.split(";")
-            statement_fluents_description = stmnt[2].replace("#", " = ").replace(":", " AND ")
-            statement_condtions_description = stmnt[3].replace("#", " = ").replace(":", " AND ")
+            statement_fluents_description = (
+                stmnt[2].replace("#", " = ").replace(":", " AND ")
+            )
+            statement_condtions_description = (
+                stmnt[3].replace("#", " = ").replace(":", " AND ")
+            )
             if stmnt[1] != "impossible":
                 st.text(
                     f"ACTION {stmnt[0]} {stmnt[1]} FLUENT {statement_fluents_description} GIVEN THAT {statement_condtions_description}"
                 )
             else:
                 st.write(stmnt)
-                st.text(f"ACTION {stmnt[0]} {stmnt[1]} GIVEN THAT {statement_condtions_description}")
+                st.text(
+                    f"ACTION {stmnt[0]} {stmnt[1]} GIVEN THAT {statement_condtions_description}"
+                )
     action_durations = list_of_actions.split(",")
 
     if len(list_of_initial_states) == 0:
@@ -677,3 +710,81 @@ with st.sidebar:
         for action_occurence in list_of_action_occurences.split(","):
             act = action_occurence.split(";")
             st.text(f"- {act[0]}={act[1]}")
+
+    # model preparation
+
+    calculate_button = st.button("Calculate model")
+
+    if calculate_button:
+        m = TimeDomainDescription()
+        if len(list_of_initial_states) > 0:
+            for initial_state in list_of_initial_states.split(","):
+                state = initial_state.split(";")
+                m.initially(**{state[0]: state[1] == "True"})
+        if len(list_of_actions) > 0:
+            for duration in list_of_actions.split(","):
+                state = duration.split(";")
+                m.duration(state[0], int(state[1]))
+        if len(list_of_statements) > 0:
+            for statement in list_of_statements.split(","):
+                stmnt = statement.split(";")
+                if stmnt[1] == "causes" or stmnt[1] == "releases":
+                    statement_fluents_model = stmnt[2].split(":")
+                    fluent_values_model = []
+                    for i in statement_fluents_model:
+                        fluent_values_model.append(
+                            Fluent(**{i.split("#")[0]: i.split("#")[1] == "True"})
+                        )
+
+                statement_conditions_model = stmnt[3].split(":")
+                condition_values_model = []
+                try:
+                    for i in statement_conditions_model:
+                        condition_values_model.append(
+                            Fluent(**{i.split("#")[0]: i.split("#")[1] == "True"})
+                        )
+                except:
+                    pass
+
+                if stmnt[1] == "causes":
+                    m.causes(
+                        stmnt[0],
+                        fluent_values_model,
+                        conditions=condition_values_model,
+                    )
+                elif stmnt[1] == "releases":
+                    m.releases(stmnt[0], fluent_values_model)
+                elif stmnt[1] == "impossible":
+                    m.impossible(stmnt[0], conditions=condition_values_model)
+
+        if len(list_of_observations) > 0:
+            OBS_list = []
+            for observation in list_of_observations.split(","):
+                obs = observation.split(";")
+                OBS_list.append(Fluent(**{obs[0]: obs[1] == "True"}))
+            OBS = (OBS_list, int(obs[2]))
+
+        if len(list_of_action_occurences) > 0:
+            ACS_list = []
+            for action in list_of_action_occurences.split(","):
+                acs = action.split(";")
+                ACS_list.append((acs[0], int(acs[1])))
+            ACS = tuple(ACS_list)
+
+        with Capturing() as output:
+            m.description()
+        st.write(output)
+
+        try:
+            s = Scenario(domain=m, observations=OBS, action_occurances=ACS)
+        except NameError:
+            s = None
+
+        try:
+            with Capturing() as output:
+                s_result = s.is_consistent(verbose=True)
+            st.write(output)
+            st.write(f"Is consistent: {s_result}")
+        except Exception as e:
+            pass
+            # st.write(f"Your mistake: {e}")
