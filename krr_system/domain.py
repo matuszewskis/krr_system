@@ -39,23 +39,27 @@ class DomainDescription:
         self._causes: Dict[str, List[Tuple[List[Fluent], List[Fluent]]]] = dict()
         self.impossibles: Dict[str, List[List[Fluent]]] = dict()
 
-    def description(self):
-        print("State")
-        print(self.fluents)
+    def __repr__(self):
+        return self.description()
 
+    def description(self):
+        repr = f"State\n{self.fluents}\n"
         if len(self._causes):
-            print("\nACTIONS")
+            repr += "\nACTIONS"
             for cause, changes in self._causes.items():
-                print("Action: ", cause)
+                repr += f"\nAction: {cause}"
                 for to_set, conditions in self._causes[cause]:
-                    print("     to set: ", to_set)
-                    print("     under conditions: ", conditions)
+                    repr += f"\n     to set: {to_set}"
+                    if conditions:
+                        repr += f"\n          under conditions: {conditions}"
 
         if len(self.impossibles):
-            print("\nImpossibilities")
-            for cause, conditions in self.impossibles:
-                print("     Action: ", cause)
-                print("         under conditions: ", conditions)
+            repr += "\nImpossibilities"
+            for cause, conditions in self.impossibles.items():
+                repr += f"\n     Action: {cause}"
+                if conditions:
+                    repr += f"\n          under conditions: {conditions}"
+        return repr
 
     def state(self):
         return [(f.name, f.value) for f in self.fluents.values()]
@@ -168,15 +172,17 @@ class DomainDescription:
         self._check_if_known(fluents)
         self._add_action(action, fluents, conditions)
 
-    def releases(self, action: str, fluents: List[Fluent] | Fluent):
+    def releases(self, action: str, fluents: List[Fluent] | Fluent, conditions: List[Fluent] | Fluent | None = None):
         if isinstance(fluents, Fluent):
             fluents = [fluents]
+        if isinstance(conditions, Fluent):
+            conditions = [conditions]
 
         for fluent in fluents:
             fluent.value = None
 
         self._check_if_known(fluents)
-        self._add_action(action, fluents, None)
+        self._add_action(action, fluents, conditions)
 
 
 class TimeDomainDescription(DomainDescription):
@@ -187,24 +193,29 @@ class TimeDomainDescription(DomainDescription):
         self.time = 1
         self.termination_time = float('inf')
 
-    def description(self):
-        print("State")
-        print(self.fluents)
+    def __repr__(self):
+        return self.description()
 
+    def description(self):
+
+        repr = f"State\n{self.fluents}\n"
         if len(self._causes):
-            print("\nACTIONS")
+            repr += "\nACTIONS"
             for cause, changes in self._causes.items():
-                print("Action: ", cause)
-                print("duration: ", self.durations[cause])
+                repr += f"\nAction: {cause}"
+                repr += f"\nduration: {self.durations[cause]}"
                 for to_set, conditions in self._causes[cause]:
-                    print("     to set: ", to_set)
-                    print("     under conditions: ", conditions)
+                    repr += f"\n     to set: {to_set}"
+                    if conditions:
+                        repr += f"\n          under conditions: {conditions}"
 
         if len(self.impossibles):
-            print("\nImpossibilities")
+            repr += "\nImpossibilities"
             for cause, conditions in self.impossibles.items():
-                print("     Action: ", cause)
-                print("         under conditions: ", conditions)
+                repr += f"\n     Action: {cause}"
+                if conditions:
+                    repr += f"\n          under conditions: {conditions}"
+        return repr
 
     def duration(self, action, time):
         self.durations[action] = time
