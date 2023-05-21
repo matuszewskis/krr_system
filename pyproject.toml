@@ -10,6 +10,7 @@ packages = []
 python = "^3.9"
 jupyter = "^1.0.0"
 streamlit = "1.14.0"
+sympy = "1.12"
 
 
 [build-system]

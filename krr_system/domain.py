@@ -3,7 +3,10 @@ from __future__ import annotations
 from copy import copy, deepcopy
 from typing import List, Tuple, Dict
 
-from krr_system.utils import fuzzy_eq, fuzzy_and
+from sympy import Symbol, satisfiable
+from sympy.logic.boolalg import BooleanFunction
+
+from krr_system.utils import fuzzy_eq, fuzzy_and, ImmutableDict
 
 
 class Fluent:
@@ -14,7 +17,6 @@ class Fluent:
             self.value = value
             break  # only the first value is processed
 
-    # for if statements
     def __bool__(self):
         return self.value
 
@@ -31,13 +33,46 @@ class Fluent:
         return f"{self.name}={self.value}"
 
 
+class Formula:
+
+    def __init__(self, formula: BooleanFunction | Symbol):
+        self.formula = formula
+        assert self.is_satisfiable()
+        self.vals_dict: dict[str, bool] = self.satisfied_values()
+        self.fluents: List[Fluent] = self.get_fluents()
+        self.conditions: List[dict] = self.satisfied_conditions()
+
+    def is_satisfiable(self) -> bool:
+        return bool(satisfiable(self.formula))
+
+    def satisfied_values(self) -> dict:
+        if self.formula is None:
+            return {}
+        models = satisfiable(self.formula, all_models=True)
+        conditions = ImmutableDict()
+        for d in models:
+            for k, v in d.items():  # has to be done this way instead e.g. via update method
+                conditions[k.name] = v
+        return conditions
+
+    def get_fluents(self) -> List[Fluent]:
+        return [Fluent(**{k: v}) for k, v in self.vals_dict.items()]
+
+    def satisfied_conditions(self):
+        if self.formula is None:
+            return None
+        models = satisfiable(self.formula, all_models=True)
+        return [dict((k.name, v) for k, v in d.items()) for d in models]
+
+
+
 class DomainDescription:
 
     def __init__(self):
 
         self.fluents: Dict[str, Fluent] = dict()
-        self._causes: Dict[str, List[Tuple[List[Fluent], List[Fluent]]]] = dict()
-        self.impossibles: Dict[str, List[List[Fluent]]] = dict()
+        self._causes: Dict[str, List[Tuple[List[Fluent], List[dict]]]] = dict()
+        self.impossibles: Dict[str, List[List[dict]]] = dict()
 
     def __repr__(self):
         return self.description()
@@ -72,8 +107,7 @@ class DomainDescription:
             fluents = [fluents]
         for fluent in fluents:
             if fluent.name not in self.fluents:
-                assumed_fluent = copy(fluent)
-                assumed_fluent.value = default_value
+                assumed_fluent = Fluent(**{fluent.name: default_value})
                 self.fluents[fluent.name] = assumed_fluent
 
     def _set(self, fluents: List[Fluent] | Fluent):
@@ -82,23 +116,31 @@ class DomainDescription:
         for fluent in fluents:
             self.fluents[fluent.name] = fluent
 
-    def _check(self, conditions: List[Fluent]) -> bool | None:
+    def _check(self, conditions: List[dict]) -> bool | None:
         """Checks a single list of fluent requirements"""
         if conditions is None:
             return True
 
-        conditions_met = []
-        for f in conditions:
-            if f.name not in self.fluents:
-                return False  # maybe should be None
+        def _fuzzy_dict_include(d1: dict, d2: dict) -> bool | None:
+            result = True
+            for k, v in d1.items():
+                if k not in d2:
+                    return False  # possible error
+                r = fuzzy_eq(v, d2[k])
+                if r is False:
+                    return False
+                if r is None:
+                    result = None
+            return result
 
-            conditions_met.append(f == self.fluents[f.name])
-
-        if False in conditions_met:
-            return False
-        if None in conditions_met:
-            return None
-        return True
+        result = False
+        for d in conditions:
+            r = _fuzzy_dict_include(d, self.fluents)
+            if r:
+                return True
+            if r is None:
+                result = None
+        return result
 
     def _possible(self, action: str) -> bool | None:
         """Checks a list of lists of fluent requirements"""
@@ -139,12 +181,14 @@ class DomainDescription:
         possible = self._possible(action_name)
         if possible is False:
             return False
-
+        print(action_name)
         for to_set, conditions in self._causes[action_name]:
+            print(self._check(conditions), conditions)
+            print(to_set, self._check(conditions), possible)
             self._do(to_set, self._check(conditions), possible)
         return True
 
-    def _add_action(self, action_name: str, fluents: List[Fluent] | Fluent, conditions: List[Fluent] | Fluent | None):
+    def _add_action(self, action_name: str, fluents: List[Fluent] | Fluent, conditions: List[dict] | Fluent | None):
         if action_name not in self._causes:
             self._causes[action_name] = []
             setattr(self.__class__, action_name, lambda x: x.do_action(action_name))
@@ -155,34 +199,30 @@ class DomainDescription:
         for key, value in kwargs.items():
             self.fluents[key] = Fluent(**{key: value})
 
-    def impossible(self, action: str, conditions: List[Fluent] | Fluent):
-        if isinstance(conditions, Fluent):
-            conditions = [conditions]
+    def impossible(self, action: str, conditions: BooleanFunction | Symbol | None = None):
+        conditions = Formula(conditions)
         if action not in self.impossibles:
             self.impossibles[action] = []
 
-        self.impossibles[action].append(conditions)
+        self.impossibles[action].append(conditions.conditions)
 
-    def causes(self, action: str, fluents: List[Fluent] | Fluent, conditions: List[Fluent] | Fluent | None = None):
-        if isinstance(fluents, Fluent):
-            fluents = [fluents]
-        if isinstance(conditions, Fluent):
-            conditions = [conditions]
+    def causes(self, action: str, formula: BooleanFunction | Symbol, conditions: BooleanFunction | Symbol | None = None):
+        formula = Formula(formula)
 
-        self._check_if_known(fluents)
-        self._add_action(action, fluents, conditions)
+        conditions = Formula(conditions)
 
-    def releases(self, action: str, fluents: List[Fluent] | Fluent, conditions: List[Fluent] | Fluent | None = None):
-        if isinstance(fluents, Fluent):
-            fluents = [fluents]
-        if isinstance(conditions, Fluent):
-            conditions = [conditions]
+        self._check_if_known(formula.fluents)
+        self._add_action(action, formula.fluents, conditions.conditions)
 
-        for fluent in fluents:
+    def releases(self, action: str, formula: BooleanFunction | Fluent, conditions: BooleanFunction | Symbol | None = None):
+        formula = Formula(formula)
+        conditions = Formula(conditions)
+
+        for fluent in formula.fluents:
             fluent.value = None
 
-        self._check_if_known(fluents)
-        self._add_action(action, fluents, conditions)
+        self._check_if_known(formula.fluents)
+        self._add_action(action, formula.fluents, conditions.conditions)
 
 
 class TimeDomainDescription(DomainDescription):
