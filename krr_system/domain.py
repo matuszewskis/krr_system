@@ -37,7 +37,8 @@ class Formula:
 
     def __init__(self, formula: BooleanFunction | Symbol):
         self.formula = formula
-        assert self.is_satisfiable()
+        if not self.is_satisfiable():
+            raise ValueError(f"Provided formula is never true. Formula: {formula}")
         self.vals_dict: dict[str, bool] = self.satisfied_values()
         self.fluents: List[Fluent] = self.get_fluents()
         self.conditions: List[dict] = self.satisfied_conditions()
@@ -63,7 +64,6 @@ class Formula:
             return None
         models = satisfiable(self.formula, all_models=True)
         return [dict((k.name, v) for k, v in d.items()) for d in models]
-
 
 
 class DomainDescription:
@@ -181,17 +181,14 @@ class DomainDescription:
         possible = self._possible(action_name)
         if possible is False:
             return False
-        print(action_name)
         for to_set, conditions in self._causes[action_name]:
-            print(self._check(conditions), conditions)
-            print(to_set, self._check(conditions), possible)
             self._do(to_set, self._check(conditions), possible)
         return True
 
     def _add_action(self, action_name: str, fluents: List[Fluent] | Fluent, conditions: List[dict] | Fluent | None):
         if action_name not in self._causes:
             self._causes[action_name] = []
-            setattr(self.__class__, action_name, lambda x: x.do_action(action_name))
+            setattr(self.__class__, action_name, lambda x: x.do_action(action_name, ))
 
         self._causes[action_name].append((fluents, conditions))
 
@@ -206,7 +203,8 @@ class DomainDescription:
 
         self.impossibles[action].append(conditions.conditions)
 
-    def causes(self, action: str, formula: BooleanFunction | Symbol, conditions: BooleanFunction | Symbol | None = None):
+    def causes(self, action: str, formula: BooleanFunction | Symbol,
+               conditions: BooleanFunction | Symbol | None = None):
         formula = Formula(formula)
 
         conditions = Formula(conditions)
@@ -214,7 +212,8 @@ class DomainDescription:
         self._check_if_known(formula.fluents)
         self._add_action(action, formula.fluents, conditions.conditions)
 
-    def releases(self, action: str, formula: BooleanFunction | Fluent, conditions: BooleanFunction | Symbol | None = None):
+    def releases(self, action: str, formula: BooleanFunction | Fluent,
+                 conditions: BooleanFunction | Symbol | None = None):
         formula = Formula(formula)
         conditions = Formula(conditions)
 
@@ -263,15 +262,16 @@ class TimeDomainDescription(DomainDescription):
     def terminate_time(self, time):
         self.termination_time = time
 
-    def make_time_step(self, action):
-        if action not in self.durations:
-            # maybe should raise exception
-            self.time += 1
-            return
+    def time_step_possible(self, action_name: str) -> bool:
+        if action_name not in self.durations:
+            return False
 
-        self.time += self.durations[action]
+        self.time += self.durations[action_name]
+        if self.time > self.termination_time:
+            return False
+        return True
 
-    def _add_action(self, action_name: str, fluents: List[Fluent], conditions: List[Fluent]):
+    def _add_action(self, action_name: str, fluents: List[Fluent] | Fluent, conditions: List[dict] | Fluent | None):
         if action_name not in self._causes:
             self._causes[action_name] = []
             setattr(self.__class__, action_name,
@@ -279,17 +279,18 @@ class TimeDomainDescription(DomainDescription):
 
         self._causes[action_name].append((fluents, conditions))
 
-    def do_action(self, action_name: str, time_start: int) -> bool:
+    def do_action(self, action_name: str, time_start: int, *args, **kwargs) -> bool:
         if time_start < self.time:
             # maybe an exception?
             return False
 
         possible = self._possible(action_name)
-        # print(f"{action_name=} {possible=}")
-        if possible is False:
+        if possible is False:  # possible can also be None
             return False
 
-        self.make_time_step(action_name)
+        if not self.time_step_possible(action_name):
+            return False
+
         for to_set, conditions in self._causes[action_name]:
             self._do(to_set, self._check(conditions), possible)
         return True

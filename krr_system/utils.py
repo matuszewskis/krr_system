@@ -35,8 +35,20 @@ def fuzzy_iff(o1, o2):
 
 
 class ImmutableDict(dict):
+    """
+    Dict that only stores key, value pairs that did not change over time.
+    If value for key changes, the key/value pair is removed from dict and cannot be added
+    """
+
+    _not_allowed = []
+
     def __setitem__(self, item, value):
-        if item in self and self[item] != value:
-            super(ImmutableDict, self).__setitem__(item, None)
+        if item in self._not_allowed:
             return
+
+        if item in self and self[item] != value:
+            self._not_allowed.append(item)
+            self.pop(item)
+            return
+
         super(ImmutableDict, self).__setitem__(item, value)

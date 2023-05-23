@@ -680,7 +680,7 @@ with st.sidebar:
         st.write(output)
 
         try:
-            s = Scenario(domain=m, observations=OBS, action_occurances=ACS)
+            s = Scenario(domain=m, observations=OBS, action_occurrences=ACS)
         except NameError:
             s = None
 
