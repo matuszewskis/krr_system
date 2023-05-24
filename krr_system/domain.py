@@ -6,7 +6,7 @@ from typing import List, Tuple, Dict
 from sympy import Symbol, satisfiable
 from sympy.logic.boolalg import BooleanFunction
 
-from krr_system.utils import fuzzy_eq, fuzzy_and, ImmutableDict
+from krr_system.utils import fuzzy_eq, fuzzy_and, PartiallyMutableDict, ImmutableDict
 
 
 class Fluent:
@@ -50,7 +50,7 @@ class Formula:
         if self.formula is None:
             return {}
         models = satisfiable(self.formula, all_models=True)
-        conditions = ImmutableDict()
+        conditions = PartiallyMutableDict()
         for d in models:
             for k, v in d.items():  # has to be done this way instead e.g. via update method
                 conditions[k.name] = v
@@ -73,6 +73,7 @@ class DomainDescription:
         self.fluents: Dict[str, Fluent] = dict()
         self._causes: Dict[str, List[Tuple[List[Fluent], List[dict]]]] = dict()
         self.impossibles: Dict[str, List[List[dict]]] = dict()
+        self._step_diff: Dict[str, bool | None] = ImmutableDict()
 
     def __repr__(self):
         return self.description()
@@ -165,24 +166,27 @@ class DomainDescription:
             return False
 
         # at this stage both possible and conditions_met are either None or True
-        diff: List[Fluent] = []
-        for fluent in fluents:
-            # check the possible changes in fluents
-            if (self.fluents[fluent.name] == fluent) is not True:  # so if any change happens
-                diff.append(fluent)
-
+        diff = [copy(f) for f in fluents]
         if conditions_met is None or possible is None:
-            diff = [copy(f) for f in diff]
             for fluent in diff:
                 fluent.value = None
+
+        for fluent in diff:
+            self._step_diff[fluent.name] = fluent.value
+
         self._set(diff)
 
     def do_action(self, action_name: str, *args, **kwargs):
+        # reset the step diff
+        self._step_diff = ImmutableDict()
         possible = self._possible(action_name)
         if possible is False:
             return False
         for to_set, conditions in self._causes[action_name]:
-            self._do(to_set, self._check(conditions), possible)
+            try:
+                self._do(to_set, self._check(conditions), possible)
+            except ValueError:
+                return False
         return True
 
     def _add_action(self, action_name: str, fluents: List[Fluent] | Fluent, conditions: List[dict] | Fluent | None):
@@ -284,13 +288,7 @@ class TimeDomainDescription(DomainDescription):
             # maybe an exception?
             return False
 
-        possible = self._possible(action_name)
-        if possible is False:  # possible can also be None
-            return False
-
         if not self.time_step_possible(action_name):
             return False
 
-        for to_set, conditions in self._causes[action_name]:
-            self._do(to_set, self._check(conditions), possible)
-        return True
+        return super().do_action(action_name, time_start, *args, **kwargs)

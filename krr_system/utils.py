@@ -40,6 +40,18 @@ class ImmutableDict(dict):
     If value for key changes, the key/value pair is removed from dict and cannot be added
     """
 
+    def __setitem__(self, item, value):
+        if item in self and self[item] != value:
+            raise ValueError("")
+
+        super(ImmutableDict, self).__setitem__(item, value)
+
+class PartiallyMutableDict(dict):
+    """
+    Dict that only stores key, value pairs that did not change over time.
+    If value for key changes, the key/value pair is removed from dict and cannot be added
+    """
+
     _not_allowed = []
 
     def __setitem__(self, item, value):
@@ -51,4 +63,4 @@ class ImmutableDict(dict):
             self.pop(item)
             return
 
-        super(ImmutableDict, self).__setitem__(item, value)
+        super(PartiallyMutableDict, self).__setitem__(item, value)
