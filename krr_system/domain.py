@@ -156,6 +156,28 @@ class DomainDescription:
             return None
         return True
 
+
+    def _set_step_diff(self):
+        diff = [copy(f) for f in self._step_diff.values()]
+        for f in diff:
+            f.value = None
+
+        self._set(diff)
+
+    def _check_step_diff(self, fluents: List[Fluent], conditions_met: bool | None, possible: bool | None) -> None:
+
+        if conditions_met is False:
+            return
+
+        # at this stage both possible and conditions_met are either None or True
+        diff = [copy(f) for f in fluents]
+        if conditions_met is None or possible is None:
+            for fluent in diff:
+                fluent.value = None
+
+        for fluent in diff:
+            self._step_diff[fluent.name] = fluent
+
     def _do(self, fluents: List[Fluent], conditions_met: bool | None, possible: bool | None) -> bool | None:
         """
         Sets fluents to values specified in fluents variable if action possible and conditions_met
@@ -177,14 +199,15 @@ class DomainDescription:
         self._set(diff)
 
     def do_action(self, action_name: str, *args, **kwargs):
-        # reset the step diff
-        self._step_diff = ImmutableDict()
         possible = self._possible(action_name)
         if possible is False:
             return False
+
+        # reset the step diff
+        self._step_diff = ImmutableDict()
         for to_set, conditions in self._causes[action_name]:
             try:
-                self._do(to_set, self._check(conditions), possible)
+                self._check_step_diff(to_set, self._check(conditions), possible)
             except ValueError:
                 return False
         return True
@@ -233,8 +256,9 @@ class TimeDomainDescription(DomainDescription):
     def __init__(self):
         super().__init__()
         self.durations: Dict[str, int] = dict()
-        self.time = 1
+        self.time = 0
         self.termination_time = float('inf')
+        self._to_set: Dict[int, List[Fluent]] = dict()
 
     def __repr__(self):
         return self.description()
@@ -269,9 +293,7 @@ class TimeDomainDescription(DomainDescription):
     def time_step_possible(self, action_name: str) -> bool:
         if action_name not in self.durations:
             return False
-
-        self.time += self.durations[action_name]
-        if self.time > self.termination_time:
+        if self.time + self.durations[action_name] > self.termination_time:
             return False
         return True
 
@@ -283,12 +305,67 @@ class TimeDomainDescription(DomainDescription):
 
         self._causes[action_name].append((fluents, conditions))
 
+    def step(self, step_size: int = 1):
+        """Steps into next time slot"""
+
+        # check if there are fluents to set
+        self.time += step_size
+        if self.time in self._to_set:
+            self._set(self._to_set[self.time])
+
     def do_action(self, action_name: str, time_start: int, *args, **kwargs) -> bool:
+        """
+        If duration of an action is greater than 1, then the fluents in step_diff are set to none until the end of an action.
+        If next action is valid, fluents are set to correct values set in step_diff
+        """
+
         if time_start < self.time:
             # maybe an exception?
             return False
+        elif time_start > self.time:
+            while time_start > self.time:
+                self.step()
 
         if not self.time_step_possible(action_name):
             return False
 
-        return super().do_action(action_name, time_start, *args, **kwargs)
+        possible = self._possible(action_name)
+        if possible is False:
+            return False
+
+        # reset the step diff
+        self._step_diff = ImmutableDict()
+        for to_set, conditions in self._causes[action_name]:
+            try:
+                self._check_step_diff(to_set, self._check(conditions), possible)
+            except ValueError:
+                return False
+
+        # not a single condition was met
+        if len(self._step_diff) == 0:
+            return False
+
+        self._set_step_diff()
+        self._to_set[self.time+self.durations[action_name]] = list(self._step_diff.values())
+        return True
+
+    def _set_step_diff(self):
+        diff = [copy(f) for f in self._step_diff.values()]
+        for f in diff:
+            f.value = None
+
+        self._set(diff)
+
+    def _check_step_diff(self, fluents: List[Fluent], conditions_met: bool | None, possible: bool | None) -> None:
+
+        if conditions_met is False:
+            return
+
+        # at this stage both possible and conditions_met are either None or True
+        diff = [copy(f) for f in fluents]
+        if conditions_met is None or possible is None:
+            for fluent in diff:
+                fluent.value = None
+
+        for fluent in diff:
+            self._step_diff[fluent.name] = fluent

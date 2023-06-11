@@ -25,7 +25,6 @@ class MyTestCase(unittest.TestCase):
         self.assertEqual(d.do_action('set_b_true', 2), True)
         self.assertEqual(d.do_action('action', 3), False)
 
-
     def test_observations(self):
         loaded = Symbol("loaded")
         hidden = Symbol("hidden")
@@ -48,7 +47,14 @@ class MyTestCase(unittest.TestCase):
         ACS = (('load', 1), ("jam", 3), ("shoot", 4))
         s = Scenario(domain=d, observations=OBS, action_occurrences=ACS)
 
-        self.assertEqual(s.is_consistent(), None)
+        self.assertEqual(s.is_consistent(verbose=True), False)
+
+        # test if after action with duration>1 fluents are set to None
+        self.assertEqual(s.check_if_condition_hold(loaded, 2), None)
+        self.assertEqual(s.check_if_condition_hold(jammed, 2), None)
+
+        # test if in time step after action duration fluents are set correct values
+        self.assertEqual(s.check_if_condition_hold(loaded & ~jammed, 3), True)
 
 
 if __name__ == '__main__':
