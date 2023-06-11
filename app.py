@@ -24,7 +24,8 @@ class Capturing(list):
 
 def formula_representation(formula_list):
     elements = []
-    for element in formula_list:
+    formula_list_split = formula_list.split(":")
+    for element in formula_list_split:
         if element in ["AND", "OR", "IMPLIES", "IFF"]:
             if len(elements) < 2:
                 return None
@@ -42,8 +43,11 @@ def formula_representation(formula_list):
     return ', '.join(elements)
 
 def formula_to_boolean(formula_list):
+    if len(formula_list) == 0:
+        return None
     elements = []
-    for element in formula_list:
+    formula_list_split = formula_list.split(":")
+    for element in formula_list_split:
         if element in ["AND", "OR", "IMPLIES", "IFF"]:
             if len(elements) < 2:
                 return None
@@ -67,6 +71,9 @@ def formula_to_boolean(formula_list):
         return elements[0]
     return None
 
+def is_formula_valid(formula_list):
+    return (formula_to_boolean(formula_list) is not None)
+
 
 file_fluents = open("variables/fluents.txt", "r")
 list_of_fluents = file_fluents.read()
@@ -79,6 +86,9 @@ list_of_statements = file_statements.read()
 
 file_initial_states = open("variables/initial_states.txt", "r")
 list_of_initial_states = file_initial_states.read()
+
+file_termination_time = open("variables/termination_time.txt", "r")
+termination_time_value = file_termination_time.read()
 
 file_observations = open("variables/observations.txt", "r")
 list_of_observations = file_observations.read()
@@ -108,6 +118,7 @@ file_fluents.close()
 file_actions.close()
 file_statements.close()
 file_initial_states.close()
+file_termination_time.close()
 file_observations.close()
 file_action_occurrences.close()
 file_technical_vars.close()
@@ -129,6 +140,7 @@ if reset_button:
     list_of_actions = ""
     list_of_statements = ""
     list_of_initial_states = ""
+    termination_time_value = ""
     list_of_observations = ""
     list_of_action_occurrences = ""
     list_of_technical_vars = "1;1"
@@ -141,6 +153,7 @@ if reset_button:
     file_actions = open("variables/actions.txt", "w")
     file_statements = open("variables/statements.txt", "w")
     file_initial_states = open("variables/initial_states.txt", "w")
+    file_termination_time = open("variables/termination_time.txt", "w")
     file_observations = open("variables/observations.txt", "w")
     file_action_occurrences = open("variables/action_occurrences.txt", "w")
     file_technical_vars = open("variables/technical_variables.txt", "w")
@@ -153,6 +166,7 @@ if reset_button:
     file_actions.write("")
     file_statements.write("")
     file_initial_states.write("")
+    file_termination_time.write("")
     file_observations.write("")
     file_action_occurrences.write("")
     file_technical_vars.write("1;1")
@@ -165,6 +179,7 @@ if reset_button:
     file_actions.close()
     file_statements.close()
     file_initial_states.close()
+    file_termination_time.close()
     file_observations.close()
     file_action_occurrences.close()
     file_technical_vars.close()
@@ -285,10 +300,17 @@ with col3:
                 label="Add",
                 key="statement_cause_submit_operator"
             )
-        statement_cause_undo = st.button(
-            label="Undo",
-            key="statement_cause_undo"
-        )
+        col3e, col3f = st.columns([2, 3])
+        with col3e:
+            statement_cause_undo = st.button(
+                label="Undo",
+                key="statement_cause_undo"
+            )
+        with col3f:
+            statement_cause_clear = st.button(
+                label="Clear",
+                key="statement_cause_clear"
+            )
         
         if statement_cause_submit_fluent:
             if len(cause_formula) > 0:
@@ -304,7 +326,9 @@ with col3:
                 cause_formula = cause_formula[:colon_index]
             else:
                 cause_formula = ""
-        st.write(formula_representation(cause_formula.split(":")))
+        if statement_cause_clear:
+            cause_formula = ""
+        st.write(formula_representation(cause_formula))
         
     elif statement_type == "releases":
         statement_release_fluent = st.selectbox(
@@ -339,10 +363,17 @@ with col4:
             label="Add",
             key="statement_condition_submit_operator"
         )
-    statement_condition_undo = st.button(
-        label="Undo",
-        key="statement_condition_undo"
-    )
+    col4e, col4f = st.columns([2, 3])
+    with col4e:
+        statement_condition_undo = st.button(
+            label="Undo",
+            key="statement_condition_undo"
+        )
+    with col4f:
+        statement_condition_clear = st.button(
+            label="Clear",
+            key="statement_condition_clear"
+        )
     
     if statement_condition_submit_fluent:
         if len(statement_condition) > 0:
@@ -358,7 +389,9 @@ with col4:
             statement_condition = statement_condition[:colon_index]
         else:
             statement_condition = ""
-    st.write(formula_representation(statement_condition.split(":")))
+    if statement_condition_clear:
+        statement_condition = ""
+    st.write(formula_representation(statement_condition))
 
 submit_button = st.text("")
 submit_button = st.button(label="Submit statement")
@@ -373,29 +406,38 @@ file_statement_condition = open("variables/statement_condition.txt", "w")
 file_statement_condition.write(statement_condition)
 file_statement_condition.close()
 
+is_statement_valid_to_submit = is_formula_valid(statement_condition)
+if statement_type != "impossible" and statement_type != "releases":
+    is_statement_valid_to_submit = is_statement_valid_to_submit and is_formula_valid(cause_formula)
+
 if submit_button:
-    if statement_type != "impossible" and statement_type != "releases":
-        statement_quartet = f"{statement_action};{statement_type};{cause_formula};{statement_condition}"
-    elif statement_type != "impossible":
-        statement_quartet = f"{statement_action};{statement_type};{statement_release_fluent};{statement_condition}"
-    else:
-        statement_quartet = (f"{statement_action};{statement_type};;{statement_condition}")
+    if is_statement_valid_to_submit:
+        if statement_type != "impossible" and statement_type != "releases":
+            statement_quartet = f"{statement_action};{statement_type};{cause_formula};{statement_condition}"
+        elif statement_type != "impossible":
+            statement_quartet = f"{statement_action};{statement_type};{statement_release_fluent};{statement_condition}"
+        else:
+            statement_quartet = (f"{statement_action};{statement_type};;{statement_condition}")
 
-    file_statements = open("variables/statements.txt", "a")
+        file_statements = open("variables/statements.txt", "a")
 
-    if len(list_of_statements) == 0:
-        file_statements.write(statement_quartet)
-        list_of_statements += statement_quartet
-    else:
-        list_of_statements_splitted = list_of_statements.split(",")
-        if statement_quartet not in list_of_statements_splitted:
-            file_statements.write("," + statement_quartet)
-            list_of_statements += "," + statement_quartet
-    st.write(list_of_statements)
+        if len(list_of_statements) == 0:
+            file_statements.write(statement_quartet)
+            list_of_statements += statement_quartet
+        else:
+            list_of_statements_splitted = list_of_statements.split(",")
+            if statement_quartet not in list_of_statements_splitted:
+                file_statements.write("," + statement_quartet)
+                list_of_statements += "," + statement_quartet
+        st.write(list_of_statements)
 
-    file_statements.close()
-    st.write(f"{statement_quartet}")
-    st.write(list_of_statements.split(","))
+        file_statements.close()
+        st.write(f"{statement_quartet}")
+        st.write(list_of_statements.split(","))
+    elif not is_formula_valid(statement_condition):
+        st.write("Invalid statement condition")
+    elif statement_type != "impossible" and statement_type != "releases" and not is_formula_valid(cause_formula):
+        st.write("Invalid cause formula")
 
 # initial condition input
 
@@ -433,6 +475,23 @@ if initial_state:
             list_of_initial_states += "," + initial_state_couple
     file_initial_states.close()
 
+# time termination
+
+st.subheader("Termination")
+col1, col2 = st.columns([3, 1])
+
+with col1:
+    termination_time_input = st.number_input(label="Input termination time", min_value=1, step=1, value=10)
+with col2:
+    st.write("")
+    termination_time = st.button(label="Submit termination time")
+
+if termination_time:
+    file_termination_time = open("variables/termination_time.txt", "w")
+    file_termination_time.write(termination_time_input)
+    termination_time_value = termination_time_input
+    file_termination_time.close()
+
 st.header("Scenario")
 
 # observations input
@@ -469,11 +528,18 @@ with col1:
             label="Add",
             key="observation_submit_operator"
         )
-    observation_formula_undo = st.button(
-        label="Undo",
-        key="observation_undo"
-    )
-    
+    col1e, col1f = st.columns([1, 3])
+    with col1e:
+        observation_formula_undo = st.button(
+            label="Undo",
+            key="observation_formula_undo"
+        )
+    with col1f:
+        observation_formula_clear = st.button(
+            label="Clear",
+            key="observation_formula_clear"
+        )
+
     if observation_formula_submit_fluent:
         if len(observation_formula) > 0:
             observation_formula += ":"
@@ -488,7 +554,9 @@ with col1:
             observation_formula = observation_formula[:colon_index]
         else:
             observation_formula = ""
-    st.write(formula_representation(observation_formula.split(":")))
+    if observation_formula_clear:
+        observation_formula = ""
+    st.write(formula_representation(observation_formula))
 with col2:
     observation_formula_time = st.number_input(
         key="observation_formula_time", label="Choose observation time", min_value=1
@@ -502,21 +570,24 @@ file_observation_formula.write(observation_formula)
 file_observation_formula.close()
 
 if observation:
-    observation_couple = (
-        f"{observation_formula};{observation_formula_time}"
-    )
+    if is_formula_valid(observation_formula):
+        observation_couple = (
+            f"{observation_formula};{observation_formula_time}"
+        )
 
-    file_observations = open("variables/observations.txt", "a")
+        file_observations = open("variables/observations.txt", "a")
 
-    if len(list_of_observations) == 0:
-        file_observations.write(observation_couple)
-        list_of_observations += observation_couple
+        if len(list_of_observations) == 0:
+            file_observations.write(observation_couple)
+            list_of_observations += observation_couple
+        else:
+            existing_observations = list_of_observations.split(",")
+            if observation_couple not in existing_observations:
+                file_observations.write("," + observation_couple)
+                list_of_observations += "," + observation_couple
+        file_observations.close()
     else:
-        list_of_observations_splitted = list_of_observations.split(",")
-        if observation_couple not in existing_observations:
-            file_observations.write("," + observation_couple)
-            list_of_observations += "," + observation_couple
-    file_observations.close()
+        st.write("Invalid observation formula")
 
 # action occurrences input
 
@@ -570,28 +641,24 @@ def scenario_calculation():
         for statement in list_of_statements.split(","):
             stmnt = statement.split(";")
             if stmnt[1] == "causes" or stmnt[1] == "releases":
-                statement_formula_model = stmnt[2].split(":")
-                formula_model = formula_to_boolean(statement_formula_model)
+                formula_model = formula_to_boolean(stmnt[2])
 
-            statement_condition_model = stmnt[3].split(":")
-            condition_model = formula_to_boolean(statement_condition_model)
+            condition_model = formula_to_boolean(stmnt[3])
 
             if stmnt[1] == "causes":
-                m.causes(
-                    stmnt[0],
-                    formula_model,
-                    conditions=condition_model,
-                )
+                m.causes(stmnt[0], formula_model, conditions=condition_model)
             elif stmnt[1] == "releases":
-                m.releases(stmnt[0], formula_model)
+                m.releases(stmnt[0], formula_model, conditions=condition_model)
             elif stmnt[1] == "impossible":
                 m.impossible(stmnt[0], conditions=condition_model)
+    if len(termination_time_value) > 0:
+        m.terminate_time(int(termination_time_value))
 
     if len(list_of_observations) > 0:
         OBS = []
         for observation in list_of_observations.split(","):
             obs = observation.split(";")
-            obs_tuple = (formula_to_boolean(obs[0].split(":")), int(obs[1]))
+            obs_tuple = (formula_to_boolean(obs[0]), int(obs[1]))
         OBS.append(obs_tuple)
 
     if len(list_of_action_occurrences) > 0:
@@ -682,11 +749,18 @@ with col1:
             label="Add",
             key="condition_query_submit_operator"
         )
-    condition_query_undo = st.button(
-        label="Undo",
-        key="condition_query_undo"
-    )
-    
+    col1e, col1f = st.columns([1, 3])
+    with col1e:
+        condition_query_undo = st.button(
+            label="Undo",
+            key="condition_query_undo"
+        )
+    with col1f:
+        condition_query_clear = st.button(
+            label="Clear",
+            key="condition_query_clear"
+        )
+
     if condition_query_submit_fluent:
         if len(condition_query) > 0:
             condition_query += ":"
@@ -701,7 +775,9 @@ with col1:
             condition_query = condition_query[:colon_index]
         else:
             condition_query = ""
-    st.write(formula_representation(condition_query.split(":")))
+    if condition_query_clear:
+        condition_query = ""
+    st.write(formula_representation(condition_query))
 with col2:
     condition_query_time = st.number_input(
         key="condition_query_time", label="Choose time", min_value=1
@@ -713,23 +789,26 @@ with col3:
     )
 
 if condition_query_button:
-    s = scenario_calculation()
-    try:
-        with Capturing() as output:
-            s_result = s.is_consistent()
-            if s_result:
-                q_result = s.check_if_condition_hold(formula_to_boolean(condition_query.split(":")), condition_query_time, verbose=True)
+    if is_formula_valid(condition_query):
+        s = scenario_calculation()
+        try:
+            with Capturing() as output:
+                s_result = s.is_consistent()
+                if s_result:
+                    q_result = s.check_if_condition_hold(formula_to_boolean(condition_query), condition_query_time, verbose=True)
+                else:
+                    q_result = False
+            st.write(output)
+            if q_result is None:
+                st.write("Condition possible, but unnecessary")
+            elif q_result:
+                st.write("Condition necessary")
             else:
-                q_result = False
-        st.write(output)
-        if q_result is None:
-            st.write("Condition possible, but unnecessary")
-        elif q_result:
-            st.write("Condition necessary")
-        else:
-            st.write("Condition impossible")
-    except Exception as e:
-        st.write(f"Your mistake: {e}")
+                st.write("Condition impossible")
+        except Exception as e:
+            st.write(f"Your mistake: {e}")
+    else:
+        st.write("Invalid condition query formula")
 
 file_condition_query = open("variables/condition_query.txt", "w")
 file_condition_query.write(condition_query)
@@ -771,8 +850,8 @@ with st.sidebar:
         st.text("Statements")
         for statement in list_of_statements.split(","):
             stmnt = statement.split(";")
-            statement_formula_description = formula_representation(stmnt[2].split(":"))
-            statement_condtions_description = formula_representation(stmnt[3].split(":"))
+            statement_formula_description = formula_representation(stmnt[2])
+            statement_condtions_description = formula_representation(stmnt[3])
             if_word = ' if '
             if len(statement_condtions_description)==0:
                 if_word = ''
@@ -795,13 +874,19 @@ with st.sidebar:
             state = initial_state.split(";")
             st.text(f"- {state[0]}={state[1]}")
 
+    if len(termination_time_value) == 0:
+        st.text("--- termination time not set ---")
+    else:
+        st.text("Termination time")
+        st.text(f"- {termination_time_value}")
+
     if len(list_of_observations) == 0:
         st.text("--- no observations inserted ---")
     else:
         st.text("Observations")
         for observation in list_of_observations.split(","):
             obs = observation.split(";")
-            st.text(f"- {formula_representation(obs[0].split(':'))} ({obs[1]})")
+            st.text(f"- {formula_representation(obs[0])} ({obs[1]})")
 
     if len(list_of_action_occurrences) == 0:
         st.text("--- no action occurrences inserted ---")
