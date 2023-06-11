@@ -31,15 +31,15 @@ class TestQuery3(unittest.TestCase):
         acs = [('load', 1), ('shoot', 4), ('load', 5)]
         s = Scenario(domain=d, observations=obs, action_occurrences=acs)
 
-        res = s.check_if_condition_hold(loaded, 1, verbose=True)
+        res = s.check_if_condition_hold(loaded, 1)
         print(f"Does loaded hold at timepoint 1? -", res)
-        self.expectEqual(res, None)
+        self.expectEqual(res, True)
 
-        res = s.check_if_condition_hold(loaded, 3, verbose=True)
+        res = s.check_if_condition_hold(loaded, 3)
         print(f"Does loaded hold at timepoint 3? -", res)
         self.expectEqual(res, True)
 
-        res = s.check_if_condition_hold(loaded, 4, verbose=True)
+        res = s.check_if_condition_hold(loaded, 4)
         print(f"Does loaded hold at timepoint 4? -", res)
         self.expectEqual(res, False)
 

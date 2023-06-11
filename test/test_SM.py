@@ -9,11 +9,11 @@ class MyTestCase(unittest.TestCase):
 
     def test_Q3_SM(self):
         """This scenario is consistent"""
-        money = Symbol("has money on a card")
-        ticket = Symbol('has a cinema ticket')
+        money = Symbol("money")
+        ticket = Symbol('ticket')
 
         d = TimeDomainDescription()
-        d.initially(m=False, ticket=False)
+        d.initially(money=False, ticket=False)
         d.causes('buy cinema ticket', ticket, conditions=money)
         d.causes("deposit money", money)
         d.causes("sell cinema ticket", money & ~ticket, conditions=ticket)
@@ -24,14 +24,14 @@ class MyTestCase(unittest.TestCase):
         d.terminate_time(8)
 
         obs = [(~money & ~ticket, 0)]
-        acs = [(1, 'deposit money'),(2,'buy cinema ticket'),(3,'sell cinema ticket')]  
+        acs = [('deposit money', 1), ('buy cinema ticket', 2), ('sell cinema ticket', 3)]
         s = Scenario(domain=d, observations=obs, action_occurrences=acs)
 
-        res1 = s.check_if_condition_hold(ticket, 6, verbose=False)
+        res1 = s.check_if_condition_hold(ticket, 6)
         print(f"Does ticket is hold at timepoint 6? -", res1)
         self.expectEqual(res1, False)
 
-        res2 = s.check_if_condition_hold(money, 6, verbose=True)
+        res2 = s.check_if_condition_hold(money, 6)
         print(f"Does money is hold at timepoint 6? -", res2)
         self.expectEqual(res2, True)
 

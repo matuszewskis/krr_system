@@ -13,7 +13,7 @@ class MyTestCase(unittest.TestCase):
         c = Symbol('crash')
 
         d = TimeDomainDescription()
-        d.initially(f=False, r=True, c=False)
+        d.initially(flying=False, refuelled=False, crash=False)
         d.causes('refuel', r, conditions= ~f & ~c)
         d.causes("takeoff", f, conditions= r & ~c)
         d.causes("land", ~f & ~r, conditions=f)
