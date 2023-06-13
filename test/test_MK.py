@@ -6,30 +6,80 @@ from krr_system import TimeDomainDescription, Scenario
 
 
 class MyTestCase(unittest.TestCase):
-    def test_Q2_PS(self):
-        """This scenario is consistent"""
-        f = Symbol("flying")
-        r = Symbol('refuelled')
-        c = Symbol('crash')
+    def test_Q1_inconsistent_MK(self):
+        inspired = Symbol("inspired")
+        painted = Symbol("painted")
 
         d = TimeDomainDescription()
-        d.initially(flying=False, refuelled=False, crash=False)
-        d.causes('refuel', r, conditions= ~f & ~c)
-        d.causes("takeoff", f, conditions= r & ~c)
-        d.causes("land", ~f & ~r, conditions=f)
-        d.releases("takeoff", c & ~f)
-        d.duration("refuel", 1)
-        d.duration("takeoff", 2)
-        d.duration("land", 1)
+        d.initially(inspired=True, painted=False)
+        d.causes("paint", painted & ~inspired)
+        d.impossible("paint", conditions=~inspired)
+        d.causes("pay", ~painted)
+        d.impossible("pay", conditions=~painted)
+        d.releases("pay", inspired)
+        d.duration("paint", 2)
+        d.duration("pay", 1)
 
-        d.terminate_time(8)
+        d.terminate_time(6)
 
-        OBS = ((~f & ~r & ~c, 0),)
-        ACS = (("refuel", 1),("takeoff", 2))
+        OBS = ((inspired & ~painted, 1),)
+        ACS = (("paint", 1), ("pay", 3), ("pay", 4), ("paint", 5))
         s = Scenario(domain=d, observations=OBS, action_occurrences=ACS)
 
-        print("Does TAKEOFF perform at 2? - ", s.does_action_perform("takeoff", 2))
-        self.assertEqual(s.does_action_perform("takeoff", 2), True)
+        print("Is scenario consistent? - ", s.is_consistent(verbose=True))
+        self.assertEqual(s.is_consistent(), False)
+        
+    def test_Q1_consistent_MK(self):
+        inspired = Symbol("inspired")
+        painted = Symbol("painted")
+
+        d = TimeDomainDescription()
+        d.initially(inspired=True, painted=False)
+        d.causes("paint", painted & ~inspired)
+        d.impossible("paint", conditions=~inspired)
+        d.causes("pay", ~painted)
+        d.impossible("pay", conditions=~painted)
+        d.releases("pay", inspired)
+        d.duration("paint", 2)
+        d.duration("pay", 1)
+
+        d.terminate_time(6)
+
+        OBS = ((inspired & ~painted, 1),)
+        ACS = (("paint", 1), ("pay", 3))
+        s = Scenario(domain=d, observations=OBS, action_occurrences=ACS)
+
+        print("Is scenario consistent? - ", s.is_consistent(verbose=True))
+        self.assertEqual(s.is_consistent(), True)
+
+    def test_Q2_MK(self):
+        inspired = Symbol("inspired")
+        painted = Symbol("painted")
+
+        d = TimeDomainDescription()
+        d.initially(inspired=True, painted=False)
+        d.causes("paint", painted & ~inspired)
+        d.impossible("paint", conditions=~inspired)
+        d.causes("pay", ~painted)
+        d.impossible("pay", conditions=~painted)
+        d.releases("pay", inspired)
+        d.duration("paint", 2)
+        d.duration("pay", 1)
+
+        d.terminate_time(6)
+
+        OBS = ((inspired & ~painted, 1),)
+        ACS = (("paint", 1), ("pay", 3))
+        s = Scenario(domain=d, observations=OBS, action_occurrences=ACS)
+
+        print("Does PAINT perform at 1? - ", s.does_action_perform("paint", 1))
+        self.assertEqual(s.does_action_perform("paint", 1), True)
+
+        print("Does PAINT perform at 1? - ", s.does_action_perform("paint", 1))
+        self.assertEqual(s.does_action_perform("paint", 3), False)
+        
+        print("Does PAY perform at 3? - ", s.does_action_perform("pay", 3))
+        self.assertEqual(s.does_action_perform("pay", 3), True)
 
 
 if __name__ == '__main__':

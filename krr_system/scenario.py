@@ -18,9 +18,9 @@ class Scenario:
 
     def does_action_perform(self, action: str, time: int) -> bool:
         """
-        All things happening should be defined in action occurances,
-        thus to check if action is performed it is neough to check scenario
-        consistency and existence is action occurances
+        All things happening should be defined in action occurrences,
+        thus to check if action is performed it is enough to check scenario
+        consistency and existence in action occurrences
         """
         return self.is_consistent() and (self.action_occurrences.get(time) == action)
 

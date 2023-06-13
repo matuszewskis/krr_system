@@ -28,11 +28,11 @@ class MyTestCase(unittest.TestCase):
         s = Scenario(domain=d, observations=obs, action_occurrences=acs)
 
         res1 = s.check_if_condition_hold(ticket, 6)
-        print(f"Does ticket is hold at timepoint 6? -", res1)
+        print(f"Does ticket hold at timepoint 6? -", res1)
         self.expectEqual(res1, False)
 
         res2 = s.check_if_condition_hold(money, 6)
-        print(f"Does money is hold at timepoint 6? -", res2)
+        print(f"Does money hold at timepoint 6? -", res2)
         self.expectEqual(res2, True)
 
 

@@ -5,7 +5,7 @@ from krr_system import TimeDomainDescription, Scenario
 
 
 class MyTestCase(unittest.TestCase):
-    def test_Q1_Q2_PS(self):
+    def test_Q1_Q3_PS(self):
         """This scenario is consistent"""
         f = Symbol("flying")
         r = Symbol('refuelled')
@@ -28,10 +28,10 @@ class MyTestCase(unittest.TestCase):
         # Q1
         print("S is consistent? - ", s.is_consistent())
         self.assertEqual(s.is_consistent(verbose=True), True)
-        # Q2
+        # Q3
         print("does in flight hold at timepoint 4 - ", s.check_if_condition_hold(f, 3))
         self.assertEqual(s.check_if_condition_hold(f, 3), None)
-        # Q2
+        # Q3
         print("does in flight hold at timepoint 4 - ", s.check_if_condition_hold(f, 4))
         self.assertEqual(s.check_if_condition_hold(f, 4), True)
 
