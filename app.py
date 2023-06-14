@@ -74,6 +74,9 @@ def formula_to_boolean(formula_list):
 def is_formula_valid(formula_list):
     return (formula_to_boolean(formula_list) is not None)
 
+def is_formula_empty(formula_list):
+    return (len(formula_list) == 0)
+
 
 file_fluents = open("variables/fluents.txt", "r")
 list_of_fluents = file_fluents.read()
@@ -406,7 +409,7 @@ file_statement_condition = open("variables/statement_condition.txt", "w")
 file_statement_condition.write(statement_condition)
 file_statement_condition.close()
 
-is_statement_valid_to_submit = is_formula_valid(statement_condition)
+is_statement_valid_to_submit = is_formula_valid(statement_condition) or is_formula_empty(statement_condition)
 if statement_type != "impossible" and statement_type != "releases":
     is_statement_valid_to_submit = is_statement_valid_to_submit and is_formula_valid(cause_formula)
 
@@ -434,7 +437,7 @@ if submit_button:
         file_statements.close()
         st.write(f"{statement_quartet}")
         st.write(list_of_statements.split(","))
-    elif not is_formula_valid(statement_condition):
+    elif not is_formula_valid(statement_condition) and not is_formula_empty(statement_condition):
         st.write("Invalid statement condition")
     elif statement_type != "impossible" and statement_type != "releases" and not is_formula_valid(cause_formula):
         st.write("Invalid cause formula")
