@@ -488,8 +488,8 @@ with col2:
 
 if termination_time:
     file_termination_time = open("variables/termination_time.txt", "w")
-    file_termination_time.write(termination_time_input)
-    termination_time_value = termination_time_input
+    file_termination_time.write(str(termination_time_input))
+    termination_time_value = str(termination_time_input)
     file_termination_time.close()
 
 st.header("Scenario")
