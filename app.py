@@ -798,7 +798,8 @@ if condition_query_button:
             with Capturing() as output:
                 s_result = s.is_consistent()
                 if s_result:
-                    q_result = s.check_if_condition_hold(formula_to_boolean(condition_query), condition_query_time, verbose=True)
+
+                    q_result = s.check_if_condition_hold(formula_to_boolean(condition_query), condition_query_time)
                 else:
                     q_result = False
             st.write(output)
