@@ -1,0 +1,1 @@
+deposit money;1,buy ticket;2,sell ticket;3

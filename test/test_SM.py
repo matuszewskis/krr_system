@@ -14,7 +14,7 @@ class MyTestCase(unittest.TestCase):
 
         d = TimeDomainDescription()
         d.initially(money=False, ticket=False)
-        d.causes('buy cinema ticket', ticket, conditions=money)
+        d.causes('buy cinema ticket', ticket & ~money, conditions=money)
         d.causes("deposit money", money)
         d.causes("sell cinema ticket", money & ~ticket, conditions=ticket)
         d.duration("buy cinema ticket", 1)
