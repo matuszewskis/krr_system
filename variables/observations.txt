@@ -1,1 +1,0 @@
-ticket:NOT:money:NOT:AND;1

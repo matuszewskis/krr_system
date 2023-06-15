@@ -1,1 +1,0 @@
-buy ticket;causes;ticket;money,deposit money;causes;money;,sell ticket;causes;money:ticket:NOT:AND;ticket
