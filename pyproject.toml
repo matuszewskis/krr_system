@@ -7,7 +7,7 @@ readme = "README.md"
 packages = []
 
 [tool.poetry.dependencies]
-python = "^3.11.0"
+python = "^3.9.17"
 jupyter = "^1.0.0"
 streamlit = "1.22.0"
 altair = "4.0.0"
