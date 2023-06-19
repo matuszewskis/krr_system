@@ -432,11 +432,11 @@ if submit_button:
             if statement_quartet not in list_of_statements_splitted:
                 file_statements.write("," + statement_quartet)
                 list_of_statements += "," + statement_quartet
-        st.write(list_of_statements)
+        # st.write(list_of_statements)
 
         file_statements.close()
-        st.write(f"{statement_quartet}")
-        st.write(list_of_statements.split(","))
+        # st.write(f"{statement_quartet}")
+        # st.write(list_of_statements.split(","))
     elif not is_formula_valid(statement_condition) and not is_formula_empty(statement_condition):
         st.write("Invalid statement condition")
     elif statement_type != "impossible" and statement_type != "releases" and not is_formula_valid(cause_formula):
@@ -616,7 +616,7 @@ if action_occurrence_button:
     action_occurrence_couple = f"{action_occurrence};{action_occurrence_time}"
 
     file_action_occurrences = open("variables/action_occurrences.txt", "a")
-    st.write()
+    # st.write()
     if len(list_of_action_occurrences) == 0:
         file_action_occurrences.write(action_occurrence_couple)
         list_of_action_occurrences += action_occurrence_couple
@@ -627,6 +627,7 @@ if action_occurrence_button:
         if action_occurrence_time not in list_of_action_occurrence_times:
             file_action_occurrences.write("," + action_occurrence_couple)
             list_of_action_occurrences += "," + action_occurrence_couple
+    file_action_occurrences.close()
 
 st.header("Queries")
 
@@ -722,11 +723,11 @@ if action_query_button:
 
 st.subheader("Condition query")
 
-col1, col2, col3 = st.columns([3, 2, 1])
+col1, col2, col3, col4 = st.columns([6, 2, 2.75, 2])
 
 with col1:
     st.write("**Formula**")
-    col1a, col1b = st.columns([4, 1])
+    col1a, col1b = st.columns([3, 1])
     with col1a:
         condition_query_select_fluent = st.selectbox(
             "Choose fluent", list_of_fluents.split(","),
@@ -739,7 +740,7 @@ with col1:
             label="Add",
             key="condition_query_submit_fluent"
         )
-    col1c, col1d = st.columns([4, 1])
+    col1c, col1d = st.columns([3, 1])
     with col1c:
         condition_query_select_operator = st.selectbox(
             "Choose operator", ["NOT", "AND", "OR", "IMPLIES", "IFF"],
@@ -752,7 +753,7 @@ with col1:
             label="Add",
             key="condition_query_submit_operator"
         )
-    col1e, col1f = st.columns([1, 3])
+    col1e, col1f = st.columns([2, 3])
     with col1e:
         condition_query_undo = st.button(
             label="Undo",
@@ -786,6 +787,11 @@ with col2:
         key="condition_query_time", label="Choose time", min_value=1
     )
 with col3:
+    condition_query_select_operator = st.selectbox(
+        "Choose type", ["NECESSARY", "POSSIBLY"],
+        key="condition_query_select_type"
+    )
+with col4:
     st.write("")
     condition_query_button = st.button(
         key="condition_query_button", label="Calculate condition query"
@@ -798,17 +804,16 @@ if condition_query_button:
             with Capturing() as output:
                 s_result = s.is_consistent()
                 if s_result:
-
-                    q_result = s.check_if_condition_hold(formula_to_boolean(condition_query), condition_query_time)
+                    c_result = s.check_if_condition_hold(formula_to_boolean(condition_query), condition_query_time)
                 else:
-                    q_result = False
-            st.write(output)
-            if q_result is None:
-                st.write("Condition possible, but unnecessary")
-            elif q_result:
-                st.write("Condition necessary")
-            else:
-                st.write("Condition impossible")
+                    c_result = False
+            if condition_query_select_operator == "NECESSARY":
+                if not c_result:
+                    c_result = False
+            elif condition_query_select_operator == "POSSIBLY":
+                if c_result is None:
+                    c_result = True
+            st.write(f"Does condtion hold: {c_result}")
         except Exception as e:
             st.write(f"Your mistake: {e}")
     else:

@@ -75,7 +75,7 @@ class MyTestCase(unittest.TestCase):
         print("Does PAINT perform at 1? - ", s.does_action_perform("paint", 1))
         self.assertEqual(s.does_action_perform("paint", 1), True)
 
-        print("Does PAINT perform at 1? - ", s.does_action_perform("paint", 1))
+        print("Does PAINT perform at 3? - ", s.does_action_perform("paint", 3))
         self.assertEqual(s.does_action_perform("paint", 3), False)
         
         print("Does PAY perform at 3? - ", s.does_action_perform("pay", 3))

@@ -39,9 +39,9 @@ class Formula:
         self.formula = formula
         if not self.is_satisfiable():
             raise ValueError(f"Provided formula is never true. Formula: {formula}")
-        self.vals_dict: dict[str, bool] = self.satisfied_values()
+        self.vals_dict: Dict[str, bool] = self.satisfied_values()
         self.fluents: List[Fluent] = self.get_fluents()
-        self.conditions: List[dict] = self.satisfied_conditions()
+        self.conditions: List[Dict[str, bool]] = self.satisfied_conditions()
 
     def is_satisfiable(self) -> bool:
         return bool(satisfiable(self.formula))
@@ -111,10 +111,17 @@ class DomainDescription:
                 assumed_fluent = Fluent(**{fluent.name: default_value})
                 self.fluents[fluent.name] = assumed_fluent
 
-    def _set(self, fluents: List[Fluent] | Fluent):
+    def _set(self, fluents: List[Fluent] | Fluent, none_overrides=True):
+        """
+        This function overrides current values of fluents.
+        If none_overrides is False, then override is not performed if new value was ment to be None.
+        This keeps currently set, possibly narrower values
+        """
         if isinstance(fluents, Fluent):
             fluents = [fluents]
         for fluent in fluents:
+            if not none_overrides and fluent.value is None:
+                continue
             self.fluents[fluent.name] = fluent
 
     def _check(self, conditions: List[dict]) -> bool | None:
@@ -155,7 +162,6 @@ class DomainDescription:
         if None in conditions_met:
             return None
         return True
-
 
     def _set_step_diff(self):
         diff = [copy(f) for f in self._step_diff.values()]
@@ -346,7 +352,7 @@ class TimeDomainDescription(DomainDescription):
             return False
 
         self._set_step_diff()
-        self._to_set[self.time+self.durations[action_name]] = list(self._step_diff.values())
+        self._to_set[self.time + self.durations[action_name]] = list(self._step_diff.values())
         return True
 
     def _set_step_diff(self):

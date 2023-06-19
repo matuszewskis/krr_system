@@ -43,11 +43,11 @@ class MyTestCase(unittest.TestCase):
         d.duration("shoot", 1)
         d.terminate_time(7)
 
-        OBS = ((alive & ~ loaded & jammed & ~ hidden, 1), (alive & loaded & jammed, 5))
+        OBS = ((alive & ~ loaded & jammed & ~ hidden, 1), (~(alive & loaded & jammed), 5))
         ACS = (('load', 1), ("jam", 3), ("shoot", 4))
         s = Scenario(domain=d, observations=OBS, action_occurrences=ACS)
 
-        self.assertEqual(s.is_consistent(verbose=True), False)
+        self.assertEqual(s.is_consistent(verbose=True), True)
 
         # test if after action with duration>1 fluents are set to None
         self.assertEqual(s.check_if_condition_hold(loaded, 2), None)
